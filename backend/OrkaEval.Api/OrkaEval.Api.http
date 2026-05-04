@@ -1,0 +1,6 @@
+@OrkaEval.Api_HostAddress = http://localhost:5079
+
+GET {{OrkaEval.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

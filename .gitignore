@@ -1,0 +1,25 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.Development.json
+
+# Node
+node_modules/
+dist/
+dist-desktop/
+
+# SQLite database
+*.db
+*.db-shm
+*.db-wal
+
+# Frontend env files (secrets)
+frontend/.env
+frontend/.env.production
+
+# OS
+.DS_Store
+Thumbs.db

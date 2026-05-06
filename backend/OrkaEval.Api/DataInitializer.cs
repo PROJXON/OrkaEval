@@ -11,11 +11,10 @@ public static class DataInitializer
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // 1. Force Clean Rebuild (PostgreSQL Fix)
-        Console.WriteLine(">>> PERFOMING FORCE REBUILD (PostgreSQL Cleanup)...");
-        await db.Database.EnsureDeletedAsync();
-        await db.Database.EnsureCreatedAsync();
-        Console.WriteLine(">>> Database Rebuild complete.");
+        // 1. Run Migrations (Safe for production)
+        Console.WriteLine(">>> Running Database Migrations...");
+        await db.Database.MigrateAsync();
+        Console.WriteLine(">>> Migrations complete.");
 
         // 2. Maintenance Logic (Cycle Generation)
         Console.WriteLine(">>> Generating Missing Cycles...");

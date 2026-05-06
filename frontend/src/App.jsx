@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import { getMyProfile } from './api';
@@ -74,7 +74,7 @@ function App() {
   );
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Suspense fallback={loadingFallback}>
         <Routes>
           <Route path="/" element={<Login />} />
@@ -100,7 +100,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

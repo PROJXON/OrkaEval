@@ -135,39 +135,34 @@ VITE_AUTH_BASE_URL=http://localhost:5000
 
 ---
 
-## Deployment (Production)
+---
 
-The production environment is split across specialized providers for maximum reliability and $0 cost:
+## 🚀 Production Deployment (Vercel & Render)
 
-### 1. Frontend (Vercel)
-- **Host**: `https://frontend-orkaeval.vercel.app`
-- **Deployment**: Managed via Vercel CLI or GitHub integration.
-- **Environment Variables**: `VITE_API_BASE_URL`, `VITE_AUTH_BASE_URL`.
+The production environment is optimized for stability and zero-configuration:
 
-### 2. Backend (Render)
-- **Host**: `https://orkaeval-production.onrender.com`
-- **Runtime**: Docker (using the project's `Dockerfile`).
-- **Secrets**: Managed via Render Environment dashboard (ConnectionStrings, JWT Key, Cloudinary Keys).
+### 1. Backend (Render + Neon Postgres)
+- **Host**: `https://orkaeval.onrender.com`
+- **Runtime**: Docker. Port 10000 is automatically managed.
+- **Database**: Managed PostgreSQL on [Neon.tech](https://neon.tech).
+- **Hardening**: Automatically handles UTC dates and protocol conversions for cloud providers.
 
-### 3. Database (Neon.tech)
-- **Type**: Managed PostgreSQL.
-- **Scaling**: Serverless (scales to zero when not in use).
+### 2. Frontend (Vercel)
+- **Host**: `https://orkaeval.vercel.app`
+- **Routing**: Uses **HashRouter** to ensure 100% stability on manual deployments and refreshes.
+- **Manual Update**:
+  ```bash
+  cd frontend
+  npm run build
+  npx vercel deploy dist --prod
+  ```
 
 ---
 
-## Common Tasks
-
-- **Creating a Migration**: `dotnet ef migrations add Name --project backend/OrkaEval.Api`
-- **Updating Database**: `dotnet ef database update --project backend/OrkaEval.Api`
-- **Building Electron**: `npm run build` then `npx electron-builder`
-
----
-
-## Troubleshooting
-
-- **CORS Errors**: Ensure the `Frontend__Url` environment variable on Render matches your Vercel URL.
-- **Build Failures**: Check that `DataInitializer` is properly referenced in `Program.cs`.
-- **Database Connection**: Verify the connection string in Render contains `sslmode=require` for Neon.
+## 🛡️ Stability Features
+- **Zero-Config Routing**: HashRouter bypasses server-side 404 issues entirely.
+- **Auto-Healing Schema**: `DataInitializer` repairs common database mismatches on startup.
+- **Protocol Translator**: Handles `postgres://` URLs automatically for cloud compatibility.
 
 ---
 

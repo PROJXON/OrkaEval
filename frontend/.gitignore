@@ -25,3 +25,5 @@ dist-ssr
 *.sw?
 
 .vercel
+.env
+TEAM_PRIVATE_CONFIG.md

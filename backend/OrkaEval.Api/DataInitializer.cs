@@ -11,24 +11,13 @@ public static class DataInitializer
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // 1. Run Migrations
-        Console.WriteLine(">>> Running Database Migrations...");
-        await db.Database.MigrateAsync();
-        Console.WriteLine(">>> Migrations complete.");
+        // 1. Force Clean Rebuild (PostgreSQL Fix)
+        Console.WriteLine(">>> PERFOMING FORCE REBUILD (PostgreSQL Cleanup)...");
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.EnsureCreatedAsync();
+        Console.WriteLine(">>> Database Rebuild complete.");
 
-        // 2. Schema Fix (Legacy)
-        Console.WriteLine(">>> Applying Legacy Schema Fixes...");
-        try
-        {
-            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Cycles ADD COLUMN Number INTEGER DEFAULT 1;");
-            Console.WriteLine(">>> Schema Fix applied (or already existed).");
-        }
-        catch (Exception ex)
-        { 
-            Console.WriteLine($">>> Schema Fix non-critical error: {ex.Message}");
-        }
-
-        // 3. Maintenance Logic (Cycle Generation)
+        // 2. Maintenance Logic (Cycle Generation)
         Console.WriteLine(">>> Generating Missing Cycles...");
         await GenerateMissingCycles(db);
         Console.WriteLine(">>> Cycle Generation complete.");

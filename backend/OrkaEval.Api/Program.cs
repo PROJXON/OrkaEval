@@ -35,10 +35,12 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 
 // ── Database ──────────────────────────────────────────────────────────────────
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString))
+if (string.IsNullOrWhiteSpace(connectionString))
 {
     connectionString = "Data Source=orkaeval.db";
 }
+
+Console.WriteLine($">>> Using connection string format: {(connectionString.Contains("://") ? "URI" : "Standard")}");
 
 var isSqlite = connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase);
 
@@ -58,7 +60,7 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 // ── Authentication ────────────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"];
-if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
 {
     jwtKey = "FallbackSuperSecretKeyForDevEnvironmentsOnly123!@#";
 }
@@ -84,8 +86,11 @@ builder.Services
     })
     .AddGoogle(options =>
     {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "placeholder";
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "placeholder";
+        var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+        var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+        options.ClientId = string.IsNullOrWhiteSpace(googleClientId) ? "placeholder" : googleClientId;
+        options.ClientSecret = string.IsNullOrWhiteSpace(googleClientSecret) ? "placeholder" : googleClientSecret;
         options.CallbackPath = "/api/auth/google/callback";
         options.SaveTokens = true;
         options.Scope.Add("profile");

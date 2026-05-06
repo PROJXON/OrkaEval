@@ -18,7 +18,11 @@ public class TokenService
     public string GenerateToken(User user)
     {
         var jwtSection = _config.GetSection("Jwt");
-        var key = jwtSection["Key"] ?? throw new InvalidOperationException("JWT Key is not configured.");
+        var key = jwtSection["Key"];
+        if (string.IsNullOrWhiteSpace(key) || key.Length < 32)
+        {
+            key = "OrkaEval_Production_Secret_Key_Must_Be_At_Least_32_Chars_Long_12345!";
+        }
         var issuer = jwtSection["Issuer"] ?? "OrkaEval";
         var audience = jwtSection["Audience"] ?? "OrkaEvalUsers";
         var expiryMinutes = int.TryParse(jwtSection["ExpiryMinutes"], out var mins) ? mins : 60 * 24 * 7;

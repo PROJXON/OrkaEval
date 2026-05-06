@@ -21,10 +21,17 @@ public static class DataInitializer
         await GenerateMissingCycles(db);
         Console.WriteLine(">>> Cycle Generation complete.");
 
-        // 4. Role Fix
+        // 3. Maintenance Logic (Role Fix)
         Console.WriteLine(">>> Running Role Fix...");
-        await db.Database.ExecuteSqlRawAsync("UPDATE Users SET Role = 'Candidate' WHERE Role = 'TeamMember'");
-        Console.WriteLine(">>> Role Fix complete.");
+        try 
+        {
+            await db.Database.ExecuteSqlRawAsync("UPDATE \"Users\" SET \"Role\" = 'Candidate' WHERE \"Role\" = 'TeamMember'");
+            Console.WriteLine(">>> Role Fix complete.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($">>> Role Fix skipped: {ex.Message}");
+        }
 
         // 5. Seed Data (Development Only)
         if (environment.IsDevelopment())

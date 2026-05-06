@@ -103,7 +103,7 @@ function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '16px', borderRadius: '12px', fontSize: '1rem', outline: 'none' }}
+                  style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', outline: 'none', background: '#fff' }}
                 />
               </div>
               <div className="form-group">
@@ -113,7 +113,7 @@ function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{ width: '100%', padding: '16px', borderRadius: '12px', fontSize: '1rem', outline: 'none' }}
+                  style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', outline: 'none', background: '#fff' }}
                 />
               </div>
               <div style={{ textAlign: 'right', marginTop: '-12px' }}>
@@ -124,7 +124,20 @@ function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-brand w-full"
+                className="btn-brand"
+                style={{ 
+                  width: '100%', 
+                  padding: '16px', 
+                  borderRadius: '12px', 
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
+                  marginTop: '10px'
+                }}
               >
                 {loading ? 'Signing in...' : 'Sign In →'}
               </button>

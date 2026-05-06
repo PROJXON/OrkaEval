@@ -8,11 +8,11 @@ using OrkaEval.Api.Data;
 
 #nullable disable
 
-namespace OrkaEval.Api.Migrations.PG
+namespace OrkaEval.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260423182911_AddAuthFields")]
-    partial class AddAuthFields
+    [Migration("20260506155303_InitialPostgres")]
+    partial class InitialPostgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,6 +47,111 @@ namespace OrkaEval.Api.Migrations.PG
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("OrkaEval.Api.Models.Candidate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CoachId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CycleEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CycleStart")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Candidates");
+                });
+
+            modelBuilder.Entity("OrkaEval.Api.Models.Coach", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Coaches");
+                });
+
+            modelBuilder.Entity("OrkaEval.Api.Models.Cycle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CandidateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Cycles");
+                });
+
             modelBuilder.Entity("OrkaEval.Api.Models.Evaluation", b =>
                 {
                     b.Property<int>("Id")
@@ -74,11 +179,49 @@ namespace OrkaEval.Api.Migrations.PG
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CycleId");
+
                     b.HasIndex("EvaluatorId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Evaluations");
+                });
+
+            modelBuilder.Entity("OrkaEval.Api.Models.FormSubmission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CandidateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CoachId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CycleId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FormData")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FormType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateId");
+
+                    b.HasIndex("CoachId");
+
+                    b.ToTable("FormSubmissions");
                 });
 
             modelBuilder.Entity("OrkaEval.Api.Models.User", b =>
@@ -88,7 +231,6 @@ namespace OrkaEval.Api.Migrations.PG
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("AvatarUrl")
-                        .HasMaxLength(512)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -119,8 +261,18 @@ namespace OrkaEval.Api.Migrations.PG
                         .HasMaxLength(512)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ResetToken")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ResetTokenExpiry")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Role")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -134,8 +286,36 @@ namespace OrkaEval.Api.Migrations.PG
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("OrkaEval.Api.Models.Candidate", b =>
+                {
+                    b.HasOne("OrkaEval.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("OrkaEval.Api.Models.Coach", b =>
+                {
+                    b.HasOne("OrkaEval.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("OrkaEval.Api.Models.Evaluation", b =>
                 {
+                    b.HasOne("OrkaEval.Api.Models.Cycle", "Cycle")
+                        .WithMany()
+                        .HasForeignKey("CycleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("OrkaEval.Api.Models.User", "Evaluator")
                         .WithMany()
                         .HasForeignKey("EvaluatorId")
@@ -624,6 +804,8 @@ namespace OrkaEval.Api.Migrations.PG
                     b.Navigation("Competencies")
                         .IsRequired();
 
+                    b.Navigation("Cycle");
+
                     b.Navigation("Evaluator");
 
                     b.Navigation("OpenDiscussion")
@@ -636,6 +818,25 @@ namespace OrkaEval.Api.Migrations.PG
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("OrkaEval.Api.Models.FormSubmission", b =>
+                {
+                    b.HasOne("OrkaEval.Api.Models.Candidate", "Candidate")
+                        .WithMany()
+                        .HasForeignKey("CandidateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrkaEval.Api.Models.Coach", "Coach")
+                        .WithMany()
+                        .HasForeignKey("CoachId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Candidate");
+
+                    b.Navigation("Coach");
                 });
 #pragma warning restore 612, 618
         }

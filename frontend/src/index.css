@@ -742,9 +742,9 @@ input[type="range"] { flex: 1; accent-color: var(--clr-brand); }
   font-family: var(--font-body);
 }
 
-.btn-brand { background: var(--clr-brand); color: #ffffff; }
-.btn-brand:hover { opacity: 0.9; box-shadow: var(--shadow-btn); transform: translateY(-1px); }
-.btn-brand:active { transform: translateY(0); }
+.btn-brand { background: linear-gradient(135deg, var(--clr-brand) 0%, var(--clr-brand-dim) 100%); color: #ffffff; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2); border-radius: 12px; }
+.btn-brand:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--clr-brand-glow); filter: brightness(1.1); }
+.btn-brand:active { transform: translateY(1px); }
 .btn-ghost { background: transparent; color: var(--clr-text-muted); border-color: var(--clr-border-strong); }
 .btn-ghost:hover { color: var(--clr-text); border-color: var(--clr-brand); }
 .btn-ghost:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }

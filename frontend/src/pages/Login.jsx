@@ -124,8 +124,7 @@ function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-brand"
-                style={{ width: '100%', border: 'none', color: '#fff', fontSize: '1.1rem', cursor: 'pointer' }}
+                className="btn-brand w-full"
               >
                 {loading ? 'Signing in...' : 'Sign In →'}
               </button>

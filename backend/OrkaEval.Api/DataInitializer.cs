@@ -11,8 +11,8 @@ public static class DataInitializer
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // 1. FINAL RESET TRIGGER (Ensuring Jay@123 password is set)
-        var shouldWipe = true; 
+        // 1. Production Mode (Locked - Preserves User Data)
+        var shouldWipe = false; 
         
         if (shouldWipe)
         {

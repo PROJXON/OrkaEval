@@ -33,16 +33,24 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.Limits.MaxRequestHeadersTotalSize = 1048576; // 1MB
 });
 
-// ── Database ──────────────────────────────────────────────────────────────────
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// ── Database Connection Logic ───────────────────────────────────────────────
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                    ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     connectionString = "Data Source=orkaeval.db";
 }
-
-Console.WriteLine($">>> Using connection string format: {(connectionString.Contains("://") ? "URI" : "Standard")}");
+else if (connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase))
+{
+    // Convert postgres:// URI to Npgsql connection string
+    var uri = new Uri(connectionString);
+    var userInfo = uri.UserInfo.Split(':');
+    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true;";
+}
 
 var isSqlite = connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase);
+Console.WriteLine($">>> Database Provider: {(isSqlite ? "SQLite" : "PostgreSQL")}");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -51,7 +59,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     else
         options.UseNpgsql(connectionString);
 
-    // Suppress pending model changes warning in EF Core 9
     options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 });
 
@@ -81,8 +88,8 @@ builder.Services
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "OrkaEval",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "OrkaEvalUsers",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     })

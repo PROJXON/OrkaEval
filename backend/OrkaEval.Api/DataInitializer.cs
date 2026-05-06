@@ -11,37 +11,33 @@ public static class DataInitializer
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // 1. Fresh Start Check (WIPE)
-        // Set WIPE_DATABASE=true in Render environment variables if you want to clear the DB again.
-        var shouldWipe = Environment.GetEnvironmentVariable("WIPE_DATABASE") == "true";
-        
-        if (shouldWipe)
-        {
-            Console.WriteLine(">>> WIPE_DATABASE=true detected. Recreating database...");
-            await db.Database.EnsureDeletedAsync();
-            await db.Database.MigrateAsync();
-            Console.WriteLine(">>> Database recreated. Starting fresh seed...");
-        }
-        else 
-        {
-            // Normal migration flow
-            Console.WriteLine(">>> Running Database Migrations...");
-            await db.Database.MigrateAsync();
-        }
+        // 1. Run Migrations (Safe for production)
+        Console.WriteLine(">>> Running Database Migrations...");
+        await db.Database.MigrateAsync();
+        Console.WriteLine(">>> Migrations complete.");
 
         // 2. Maintenance Logic (Cycle Generation)
         Console.WriteLine(">>> Generating Missing Cycles...");
         await GenerateMissingCycles(db);
-        
+        Console.WriteLine(">>> Cycle Generation complete.");
+
         // 3. Maintenance Logic (Role Fix)
+        Console.WriteLine(">>> Running Role Fix...");
         try 
         {
             await db.Database.ExecuteSqlRawAsync("UPDATE \"Users\" SET \"Role\" = 'Candidate' WHERE \"Role\" = 'TeamMember'");
+            Console.WriteLine(">>> Role Fix complete.");
         }
-        catch { /* Ignore if fails on fresh DB */ }
+        catch (Exception ex)
+        {
+            Console.WriteLine($">>> Role Fix skipped: {ex.Message}");
+        }
 
-        // 5. Seed Core Admin / Development Data
-        await SeedCoreData(db, environment.IsDevelopment());
+        // 5. Seed Data (Development Only)
+        if (environment.IsDevelopment())
+        {
+            await SeedDevelopmentData(db);
+        }
     }
 
     private static async Task GenerateMissingCycles(AppDbContext db)
@@ -92,7 +88,7 @@ public static class DataInitializer
         await db.SaveChangesAsync();
     }
 
-    private static async Task SeedCoreData(AppDbContext db, bool isDevelopment)
+    private static async Task SeedDevelopmentData(AppDbContext db)
     {
         var email = "jagadeesh.madhineni.projxon@gmail.com";
         var defaultName = "Jagadeesh Madhineni";

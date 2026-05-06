@@ -21,8 +21,7 @@ const Logo = ({ size = 48, className = "" }) => {
           width: size, 
           height: 'auto',
           display: 'block',
-          objectFit: 'contain',
-          mixBlendMode: 'multiply'
+          objectFit: 'contain'
         }} 
       />
     </div>

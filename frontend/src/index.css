@@ -1820,6 +1820,37 @@ select.fi:focus, textarea.fi:focus, input.fi:focus {
 .mb-8 { margin-bottom: 32px; }
 .anim-slide-up { animation: slideUp 0.4s ease forwards; }
 
+/* ── Mobile Optimizations ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .auth-page { padding: 20px; }
+  .logo-box { 
+    background: transparent !important; 
+    padding: 0 !important; 
+    margin-bottom: 30px !important;
+  }
+  .logo-box img { 
+    width: 120px !important; 
+    height: auto !important; 
+    filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.4));
+  }
+  
+  .landing-hero h2 { 
+    font-size: 2rem !important; 
+    line-height: 1.2 !important;
+    margin-bottom: 16px !important;
+    font-weight: 800 !important;
+  }
+  
+  .landing-hero p { 
+    font-size: 1.1rem !important; 
+    line-height: 1.5 !important;
+    color: #e8edf5 !important;
+    opacity: 0.9;
+  }
+  
+  .auth-card { padding: 30px 20px !important; }
+}
+
 /* ── Print Styles for PDF Export ─────────────────────────────────────────── */
 @media print {
   .dashboard-nav, .theme-toggle, .btn-ghost, .btn-brand, .btn-link, .btn-close {

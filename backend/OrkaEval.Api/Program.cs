@@ -121,12 +121,16 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// ── CORS (Solid Configuration) ────────────────────────────────────────────────
+// ── CORS (Production Ready) ───────────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.SetIsOriginAllowed(origin => true) // Allow any local origin
+        policy.WithOrigins(
+                "http://localhost:5173", 
+                "http://localhost:5000",
+                "https://frontend-orkaeval.vercel.app"
+              )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials()

@@ -3,6 +3,7 @@ import { requestPasswordReset } from '../api';
 import toast from 'react-hot-toast';
 import { handleApiError } from '../utils/errorHandler';
 import { Link } from 'react-router-dom';
+import Logo from '../components/Logo';
 
 function ForgotPassword() {
   const [loading, setLoading] = useState(false);
@@ -41,10 +42,10 @@ function ForgotPassword() {
 
       <div className="auth-container" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', maxWidth: '1000px', width: '100%', alignItems: 'center', gap: '64px' }}>
         <div className="auth-brand">
-          <div className="auth-brand__logo" style={{ width: '80px', height: '80px', marginBottom: '32px' }}>
-            <img src="/assets/orkaeval-logo.png" alt="OrkaEval" style={{ width: '100%', height: '100%' }} />
-          </div>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '24px' }}>Account Recovery</h1>
+          <Link to="/login" style={{ textDecoration: 'none' }}>
+            <Logo size={240} className="mb-8" />
+          </Link>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '3.5rem', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '24px', color: 'var(--clr-navy)' }}>Account Recovery</h1>
           <p style={{ fontSize: '1.25rem', color: 'var(--clr-text-muted)', marginBottom: '48px', maxWidth: '400px' }}>
             Enter your email address and we'll help you get back into your account safely.
           </p>

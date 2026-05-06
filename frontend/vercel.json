@@ -1,4 +1,6 @@
 {
+  "buildCommand": null,
+  "outputDirectory": "dist",
   "routes": [
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }

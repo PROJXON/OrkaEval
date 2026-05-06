@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
+import Logo from '../components/Logo';
 
 function Register() {
   const [loading, setLoading] = useState(false);
@@ -67,10 +68,10 @@ function Register() {
       <div className="auth-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '100%', margin: 0, gap: 0 }}>
         <div className="auth-card" style={{ maxWidth: '480px', width: '100%', margin: '20px', animation: 'slideUp 0.6s ease-out' }}>
           <div className="auth-card__inner" style={{ padding: '48px' }}>
-            <div className="auth-card__header" style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <div className="logo-img-wrap" style={{ margin: '0 auto 20px', width: '64px', height: '64px' }}>
-                <img src="/assets/orkaeval-logo.png" alt="OrkaEval" />
-              </div>
+            <div className="auth-card__header" style={{ textAlign: 'center', marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Link to="/login" style={{ textDecoration: 'none' }}>
+                <Logo size={140} className="mb-4" />
+              </Link>
               <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px' }}>Create Account</h2>
               <p style={{ fontSize: '0.95rem' }}>Join the OrkaEval Performance Review Platform</p>
             </div>

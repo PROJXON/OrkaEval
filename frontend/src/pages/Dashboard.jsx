@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { clearToken } from '../utils/tokenStore';
@@ -7,6 +7,7 @@ import { getCandidates, submitForm, getFormHistory } from '../api';
 import EvaluationContainer from '../components/forms/EvaluationContainer';
 import EvaluatorDashboard from '../components/forms/EvaluatorDashboard';
 import PerformanceReviewResults from '../components/forms/PerformanceReviewResults';
+import Logo from '../components/Logo';
 
 function Dashboard() {
   const { user } = useUser();
@@ -194,70 +195,72 @@ function Dashboard() {
   };
 
   return (
-    <div className="dashboard-page">
-      <nav className="dashboard-nav">
-        <div className="nav-brand">
-          <img src="/assets/orkaeval-logo.png" alt="Logo" />
-          <span>OrkaEval</span>
-        </div>
+    <div className="dashboard-page" style={{ minHeight: '100vh', background: 'var(--clr-bg)' }}>
+      <nav className="dashboard-nav" style={{ 
+        position: 'sticky', top: 0, zIndex: 100,
+        background: 'var(--clr-glass)', 
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid var(--clr-border)',
+        padding: '0 40px',
+        height: '80px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <Link to="/dashboard" className="nav-brand" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <Logo size={48} />
+        </Link>
         
-        <div className="nav-actions">
+        <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           {(user?.role === 'Both' || user?.Role === 'Both') && (
             <button 
               className="btn-nav btn-nav--switcher"
               onClick={() => setViewRole(viewRole === 'Candidate' ? 'Coach' : 'Candidate')}
+              style={{ padding: '10px 20px', borderRadius: '12px', border: '1px solid rgba(10,31,61,0.1)', background: 'var(--clr-surface)', color: 'var(--clr-text)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              <span className="btn-nav__icon">🔄</span>
-              <span className="btn-nav__text">Switch to {viewRole === 'Candidate' ? 'Coach' : 'Candidate'}</span>
+              <span style={{ fontSize: '1.2rem' }}>🔄</span>
+              Switch to {viewRole === 'Candidate' ? 'Coach' : 'Candidate'}
             </button>
           )}
           {viewRole !== 'Coach' && (
-            <button className={`btn-nav btn-nav--history ${showHistory ? 'active' : ''}`} onClick={() => setShowHistory(!showHistory)}>
-              <span className="btn-nav__icon">🕒</span>
-              <span className="btn-nav__text">{showHistory ? 'Close History' : 'View History'}</span>
+            <button 
+              className={`btn-nav ${showHistory ? 'active' : ''}`} 
+              onClick={() => setShowHistory(!showHistory)}
+              style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: showHistory ? 'var(--clr-navy)' : 'transparent', color: showHistory ? '#fff' : 'var(--clr-text)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
+            >
+              🕒 {showHistory ? 'Close History' : 'View History'}
             </button>
           )}
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+          <button className="theme-toggle" onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: '8px' }}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <button className="btn-nav" onClick={() => window.location.href = '/profile'} style={{ marginLeft: 12, padding: 4, borderRadius: '50%' }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', background: 'var(--clr-surface-2)', border: '2px solid var(--clr-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s', position: 'relative' }}>
-              {user?.avatarUrl ? (
-                <img 
-                  src={getServerUrl(user.avatarUrl)} 
-                  alt="" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                />
-              ) : null}
-              <div style={{ width: '100%', height: '100%', display: user?.avatarUrl ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--clr-surface-2)' }}>
-                <span style={{ fontSize: '1.2rem' }}>👤</span>
-              </div>
-            </div>
-          </button>
+          <div 
+            onClick={() => window.location.href = '/profile'} 
+            style={{ width: 44, height: 44, borderRadius: '14px', overflow: 'hidden', background: '#fff', border: '1px solid rgba(10,31,61,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+          >
+            {user?.avatarUrl ? (
+              <img 
+                src={getServerUrl(user.avatarUrl)} 
+                alt="" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+            ) : <span style={{ fontSize: '1.2rem' }}>👤</span>}
+          </div>
         </div>
       </nav>
 
       <main className="dashboard-content">
-        <header className="content-header">
-          <div className="profile-info">
-            <h1>
-              {user?.avatarUrl && (
-                <img 
-                  src={getServerUrl(user.avatarUrl)} 
-                  alt="" 
-                  style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', marginRight: 16, verticalAlign: 'middle', border: '2px solid var(--clr-brand)' }} 
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              )}
-              Welcome, {user?.displayName}
+        <header className="content-header" style={{ marginBottom: '48px' }}>
+          <div className="profile-info" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h1 style={{ fontSize: '2.5rem', display: 'flex', alignItems: 'center', gap: '20px' }}>
+              Welcome back, <span style={{ color: 'var(--clr-azure)' }}>
+                {viewRole === 'Coach' ? `Coach ${user?.displayName}` : user?.displayName}
+              </span>
             </h1>
-            <div className="profile-stats">
-              <span className="stat-tag">Role: <strong>{viewRole}</strong></span>
-              {viewRole === 'Candidate' && user?.coachName && (
-                <span className="stat-tag">Coach: <strong>{user.coachName}</strong></span>
-              )}
-              <span className="stat-tag">Cycle {cycleInfo.number}: <strong>{cycleInfo.start} - {cycleInfo.end}</strong></span>
+            <div className="profile-stats" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <span className="stat-tag" style={{ background: 'var(--clr-border)', color: 'var(--clr-text-muted)', padding: '6px 16px', borderRadius: '100px', fontSize: '0.8rem', fontWeight: 600 }}>
+                Cycle {cycleInfo.number}: {cycleInfo.start} - {cycleInfo.end}
+              </span>
             </div>
           </div>
         </header>

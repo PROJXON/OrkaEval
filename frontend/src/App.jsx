@@ -20,19 +20,32 @@ function RequireAuth({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 1. Check if token is in the URL (browser OAuth redirect flow)
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
+    // 1. Check if token is in the URL (support both normal and HashRouter URLs)
+    const getParam = (name) => {
+      const search = new URLSearchParams(window.location.search).get(name);
+      if (search) return search;
+      // If not in search, check the hash (for HashRouter)
+      const hashParts = window.location.hash.split('?');
+      if (hashParts.length > 1) {
+        return new URLSearchParams(hashParts[1]).get(name);
+      }
+      return null;
+    };
+
+    const tokenFromUrl = getParam('token');
     if (tokenFromUrl) {
       saveToken(tokenFromUrl);
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Clean up URL
+      const cleanPath = window.location.pathname + window.location.hash.split('?')[0];
+      window.history.replaceState({}, document.title, cleanPath);
     }
 
     const verify = async () => {
       try {
         const profile = await getMyProfile();
         setUser(profile);
-      } catch {
+      } catch (err) {
+        console.error("Verification failed:", err);
         clearToken();
         setUser(null);
         navigate('/');

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { saveToken } from '../utils/tokenStore';
 import { useUser } from '../context/UserContext';
+import Logo from '../components/Logo';
 
 function Login() {
   const [loading, setLoading] = useState(false);
@@ -37,68 +38,64 @@ function Login() {
   };
 
   return (
-    <div className="auth-page">
+    <div className="auth-page" style={{ padding: '20px' }}>
       <div className="auth-bg" aria-hidden="true">
         <div className="auth-bg__grid"></div>
-        <div className="auth-bg__orb auth-bg__orb--1"></div>
-        <div className="auth-bg__orb auth-bg__orb--2"></div>
-        <div className="auth-bg__orb auth-bg__orb--3"></div>
-        <div className="auth-bg__noise"></div>
       </div>
 
-      <div className="auth-container" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', maxWidth: '1000px', width: '100%', alignItems: 'center', gap: '64px' }}>
-        <div className="auth-brand">
-          <div className="auth-brand__logo" style={{ width: '80px', height: '80px', marginBottom: '32px' }}>
-            <img src="/assets/orkaeval-logo.png" alt="OrkaEval" style={{ width: '100%', height: '100%' }} />
-          </div>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '24px' }}>OrkaEval</h1>
-          <p style={{ fontSize: '1.25rem', color: 'var(--clr-text-muted)', marginBottom: '48px', maxWidth: '400px' }}>
+      <div className="auth-container" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', maxWidth: '1100px', width: '100%', alignItems: 'center', gap: '80px', margin: '0 auto' }}>
+        <div className="auth-brand anim-float" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <Logo size={220} className="mb-4" />
+          </Link>
+          <p className="mono-tag" style={{ marginBottom: '16px' }}>Enterprise Performance OS</p>
+          <p style={{ fontSize: '1.4rem', color: 'var(--clr-text-muted)', marginBottom: '48px', maxWidth: '450px', lineHeight: 1.4, fontWeight: 500 }}>
             Professional performance tracking and competency management for modern teams.
           </p>
           
-          <div className="auth-features" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="auth-features" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', width: '100%' }}>
              {[
                { icon: '🎯', t: 'Competency Mapping', d: 'Track 5-area growth cycles' },
                { icon: '📊', t: 'JSON Analytics', d: 'Flexible form-based reporting' },
                { icon: '🛡️', t: 'Enterprise Ready', d: 'Secure multi-role management' }
              ].map(f => (
-               <div key={f.t} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                 <span style={{ fontSize: '1.5rem' }}>{f.icon}</span>
-                 <div>
-                   <div style={{ fontWeight: 700 }}>{f.t}</div>
-                   <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>{f.d}</div>
+               <div key={f.t} style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.4)', border: '1px solid rgba(10,31,61,0.05)' }}>
+                 <span style={{ fontSize: '1.8rem' }}>{f.icon}</span>
+                 <div style={{ textAlign: 'left' }}>
+                   <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--clr-navy)' }}>{f.t}</div>
+                   <div style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)' }}>{f.d}</div>
                  </div>
                </div>
              ))}
           </div>
         </div>
 
-        <div className="auth-card" style={{ maxWidth: '440px', width: '100%' }}>
-          <div className="auth-card__inner" style={{ padding: '48px' }}>
-            <div className="auth-card__header" style={{ marginBottom: '32px' }}>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Welcome Back</h2>
-              <p>Sign in to your account</p>
+        <div className="auth-card" style={{ width: '100%' }}>
+          <div className="auth-card__inner" style={{ padding: '60px' }}>
+            <div className="auth-card__header" style={{ marginBottom: '40px' }}>
+              <h2 style={{ fontSize: '2.2rem', marginBottom: '8px' }}>Welcome Back</h2>
+              <p style={{ color: 'var(--clr-text-muted)' }}>Sign in to continue to OrkaEval</p>
             </div>
 
             <button
               className="btn-google"
               onClick={handleGoogleLogin}
               disabled={loading}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '14px', borderRadius: '12px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', cursor: 'pointer', fontWeight: 600, marginBottom: '24px' }}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '16px', borderRadius: '14px', cursor: 'pointer', fontWeight: 600, marginBottom: '32px' }}
             >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="G" />
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" alt="G" />
               Continue with Google
             </button>
 
-            <div className="auth-card__divider" style={{ margin: '24px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ flex: 1, height: '1px', background: 'var(--clr-border)' }}></div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--clr-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>or password</span>
-              <div style={{ flex: 1, height: '1px', background: 'var(--clr-border)' }}></div>
+            <div className="auth-card__divider" style={{ margin: '32px 0', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div className="divider-line" style={{ flex: 1, height: '1px' }}></div>
+              <span className="mono-tag" style={{ fontSize: '0.7rem', color: 'var(--clr-text-muted)' }}>OR PASSWORD</span>
+              <div className="divider-line" style={{ flex: 1, height: '1px' }}></div>
             </div>
 
-            {error && <div style={{ color: '#ef4444', background: '#fef2f2', padding: '12px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '20px', border: '1px solid #fee2e2' }}>{error}</div>}
+            {error && <div style={{ color: '#ef4444', background: '#fef2f2', padding: '16px', borderRadius: '12px', fontSize: '0.9rem', marginBottom: '24px', border: '1px solid #fee2e2' }}>{error}</div>}
 
-            <form onSubmit={handlePasswordLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <form onSubmit={handlePasswordLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div className="form-group">
                 <input
                   type="email"
@@ -106,21 +103,21 @@ function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-bg-2)', fontSize: '1rem', outline: 'none' }}
+                  style={{ width: '100%', padding: '16px', borderRadius: '12px', fontSize: '1rem', outline: 'none' }}
                 />
               </div>
-              <div className="form-group" style={{ marginBottom: '12px' }}>
+              <div className="form-group">
                 <input
                   type="password"
                   placeholder="Password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-bg-2)', fontSize: '1rem', outline: 'none' }}
+                  style={{ width: '100%', padding: '16px', borderRadius: '12px', fontSize: '1rem', outline: 'none' }}
                 />
               </div>
-              <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '8px' }}>
-                <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: 'var(--clr-text-muted)', textDecoration: 'none', fontWeight: 600 }}>
+              <div style={{ textAlign: 'right', marginTop: '-12px' }}>
+                <Link to="/forgot-password" style={{ fontSize: '0.85rem', color: 'var(--clr-azure)', textDecoration: 'none', fontWeight: 700 }}>
                   Forgot password?
                 </Link>
               </div>
@@ -128,14 +125,16 @@ function Login() {
                 type="submit"
                 disabled={loading}
                 className="btn-brand"
-                style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: 'var(--clr-brand)', color: '#fff', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer', transition: '0.2s', boxShadow: '0 8px 25px rgba(37, 99, 235, 0.35)' }}
+                style={{ width: '100%', border: 'none', color: '#fff', fontSize: '1.1rem', cursor: 'pointer' }}
               >
                 {loading ? 'Signing in...' : 'Sign In →'}
               </button>
             </form>
 
-            <footer className="auth-card__footer" style={{ marginTop: '32px', textAlign: 'center' }}>
-              <p style={{ fontSize: '0.9rem' }}>Don't have an account? <Link to="/register" style={{ color: 'var(--clr-brand)', fontWeight: 700, textDecoration: 'none' }}>Create one</Link></p>
+            <footer className="auth-card__footer" style={{ marginTop: '40px', textAlign: 'center' }}>
+              <p style={{ fontSize: '0.95rem', color: 'var(--clr-text-muted)' }}>
+                Don't have an account? <Link to="/register" style={{ color: 'var(--clr-brand)', fontWeight: 800, textDecoration: 'none' }}>Create one</Link>
+              </p>
             </footer>
           </div>
         </div>

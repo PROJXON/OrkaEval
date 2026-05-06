@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+/* ── Theme Definitions ────────────────────────────────────────────────── */
+:root {
+  /* Brand Constants */
+  --clr-navy:         #0a1f3d;
+  --clr-azure:        #0a87d8;
+  --clr-azure-glow:   #4db7f5;
+  
+  /* Light Mode */
+  --clr-bg:           #f8fafc;
+  --clr-glass:        rgba(255, 255, 255, 0.7);
+  --clr-surface:      #ffffff;
+  --clr-border:       rgba(10, 31, 61, 0.08);
+  --clr-text:         #1e293b;
+  --clr-text-muted:   #64748b;
+  --clr-brand-glow:   rgba(10, 135, 216, 0.1);
+  --shadow-premium:   0 20px 50px rgba(10, 31, 61, 0.05), 0 0 0 1px rgba(10, 31, 61, 0.02);
+  --grad-bg:          radial-gradient(circle at top right, #e2e8f0 0%, #f8fafc 100%);
+  --clr-btn-text:     #1e293b;
+}
+
+[data-theme="dark"] {
+  /* Dark Mode (Obsidian) */
+  --clr-bg:           #020617;
+  --clr-glass:        rgba(15, 23, 42, 0.8);
+  --clr-surface:      #0f172a;
+  --clr-border:       rgba(255, 255, 255, 0.12);
+  --clr-text:         #f1f5f9;
+  --clr-text-muted:   #94a3b8;
+  --clr-brand-glow:   rgba(10, 135, 216, 0.25);
+  --shadow-premium:   0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --grad-bg:          radial-gradient(circle at top right, #1e293b 0%, #020617 100%);
+  --clr-btn-text:     #1e293b; /* Keep Google text dark for readability on white bg */
+}
+
+/* ── Typography ───────────────────────────────────────────────────────── */
+:root {
+  --font-body:    'Inter', sans-serif;
+  --font-display: 'Inter', sans-serif;
+  --font-mono:    'Space Mono', monospace;
+  --r-lg:  20px;
+}
+
+/* ── Global Styles ────────────────────────────────────────────────────── */
+body {
+    background: var(--grad-bg) !important;
+    color: var(--clr-text) !important;
+    font-family: var(--font-body) !important;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-display) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.04em !important;
+    color: var(--clr-text) !important;
+}
+
+.mono-tag {
+    font-family: var(--font-mono) !important;
+    color: var(--clr-azure);
+    font-weight: 700;
+}
+
+.auth-card {
+    background: var(--clr-glass) !important;
+    backdrop-filter: blur(30px) !important;
+    border: 1px solid var(--clr-border) !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+
+.btn-brand {
+    background: linear-gradient(135deg, var(--clr-azure) 0%, #006eb5 100%) !important;
+    color: #fff !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+}
+
+.btn-google {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid var(--clr-border) !important;
+}
+
+.divider-line {
+    background: var(--clr-border) !important;
+}
+
+input {
+    border: 1px solid var(--clr-border) !important;
+    background: var(--clr-surface) !important;
+    color: var(--clr-text) !important;
+}
+
+input::placeholder {
+    color: var(--clr-text-muted) !important;
+    opacity: 0.6;
+}

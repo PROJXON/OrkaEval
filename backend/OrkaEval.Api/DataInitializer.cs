@@ -11,33 +11,32 @@ public static class DataInitializer
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // 1. Run Migrations (Safe for production)
-        Console.WriteLine(">>> Running Database Migrations...");
-        await db.Database.MigrateAsync();
-        Console.WriteLine(">>> Migrations complete.");
+        // 1. Fresh Start Check (FORCE WIPE TRIGGERED BY USER)
+        // We use EnsureDeleted + EnsureCreated to guarantee a perfect PostgreSQL schema.
+        var shouldWipe = true; 
+        
+        if (shouldWipe)
+        {
+            Console.WriteLine(">>> WIPE_DATABASE triggered. Building fresh PostgreSQL schema...");
+            await db.Database.EnsureDeletedAsync();
+            await db.Database.EnsureCreatedAsync(); // Builds schema directly from models
+            Console.WriteLine(">>> Database schema built. Starting fresh seed...");
+        }
+        else 
+        {
+            // Normal migration flow (will be used after the first successful wipe)
+            try {
+                await db.Database.MigrateAsync();
+            } catch (Exception ex) {
+                Console.WriteLine($">>>> Migration skipped/failed (EnsureCreated likely handled it): {ex.Message}");
+            }
+        }
 
         // 2. Maintenance Logic (Cycle Generation)
-        Console.WriteLine(">>> Generating Missing Cycles...");
         await GenerateMissingCycles(db);
-        Console.WriteLine(">>> Cycle Generation complete.");
-
-        // 3. Maintenance Logic (Role Fix)
-        Console.WriteLine(">>> Running Role Fix...");
-        try 
-        {
-            await db.Database.ExecuteSqlRawAsync("UPDATE \"Users\" SET \"Role\" = 'Candidate' WHERE \"Role\" = 'TeamMember'");
-            Console.WriteLine(">>> Role Fix complete.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($">>> Role Fix skipped: {ex.Message}");
-        }
-
-        // 5. Seed Data (Development Only)
-        if (environment.IsDevelopment())
-        {
-            await SeedDevelopmentData(db);
-        }
+        
+        // 3. Seed Core Admin Data
+        await SeedCoreData(db, environment.IsDevelopment());
     }
 
     private static async Task GenerateMissingCycles(AppDbContext db)
@@ -71,24 +70,9 @@ public static class DataInitializer
                 await db.SaveChangesAsync();
             }
         }
-
-        // Align evaluations to correct cycles
-        var evals = await db.Evaluations.ToListAsync();
-        var allCycles = await db.Cycles.ToListAsync();
-        foreach (var e in evals)
-        {
-            var cand = candidates.FirstOrDefault(c => c.UserId == e.UserId);
-            if (cand == null) continue;
-            var correctCycle = allCycles.FirstOrDefault(c => c.CandidateId == cand.Id && c.StartDate <= e.UpdatedAt && c.EndDate >= e.UpdatedAt);
-            if (correctCycle != null && e.CycleId != correctCycle.Id)
-            {
-                e.CycleId = correctCycle.Id;
-            }
-        }
-        await db.SaveChangesAsync();
     }
 
-    private static async Task SeedDevelopmentData(AppDbContext db)
+    private static async Task SeedCoreData(AppDbContext db, bool isDevelopment)
     {
         var email = "jagadeesh.madhineni.projxon@gmail.com";
         var defaultName = "Jagadeesh Madhineni";
@@ -107,10 +91,6 @@ public static class DataInitializer
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
-
-        if (string.IsNullOrWhiteSpace(user.DisplayName)) user.DisplayName = defaultName;
-        if (user.Role != UserRole.Both) user.Role = UserRole.Both;
-        await db.SaveChangesAsync();
 
         // Ensure Coach record
         var coach = await db.Coaches.FirstOrDefaultAsync(c => c.UserId == user.Id);

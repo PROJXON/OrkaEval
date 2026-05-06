@@ -15,7 +15,7 @@ function Login() {
 
   const handleGoogleLogin = () => {
     setLoading(true);
-    const authBase = import.meta.env.VITE_AUTH_BASE_URL || 'http://127.0.0.1:5000';
+    const authBase = import.meta.env.VITE_AUTH_BASE_URL || 'https://orkaeval.onrender.com';
     const isElectron = !!window.electron;
     const returnParam = isElectron ? 'returnUrl=electron' : '';
     window.location.href = `${authBase}/api/auth/google${returnParam ? '?' + returnParam : ''}`;

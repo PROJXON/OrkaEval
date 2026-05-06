@@ -27,7 +27,7 @@ function Dashboard() {
   const getServerUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    const base = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/api$/, '');
+    const base = (import.meta.env.VITE_API_BASE_URL || 'https://orkaeval.onrender.com/api').replace(/\/api$/, '');
     return `${base}${url}`;
   };
 

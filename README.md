@@ -16,10 +16,10 @@ npm install
 ```
 
 ### 2. Configure (One-time)
-Create a file named `.env` inside the `frontend` folder and paste this:
+Create a file named `.env` inside the `frontend` folder:
 ```env
-VITE_API_BASE_URL=https://orkaeval.onrender.com/api
-VITE_AUTH_BASE_URL=https://orkaeval.onrender.com
+VITE_API_BASE_URL=PASTE_YOUR_RENDER_API_URL_HERE
+VITE_AUTH_BASE_URL=PASTE_YOUR_RENDER_AUTH_URL_HERE
 ```
 
 ### 3. Launch Desktop App

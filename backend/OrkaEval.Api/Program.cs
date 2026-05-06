@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using OrkaEval.Api.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.FileProviders;
+using OrkaEval.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 

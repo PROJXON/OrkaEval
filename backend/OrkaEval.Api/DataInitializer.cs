@@ -11,13 +11,13 @@ public static class DataInitializer
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // 1. Fresh Start Check (FORCE WIPE TRIGGERED BY USER)
-        // Set this to true temporarily to wipe everything, then back to false.
-        var shouldWipe = true; 
+        // 1. Fresh Start Check (WIPE)
+        // Set WIPE_DATABASE=true in Render environment variables if you want to clear the DB again.
+        var shouldWipe = Environment.GetEnvironmentVariable("WIPE_DATABASE") == "true";
         
         if (shouldWipe)
         {
-            Console.WriteLine(">>> WIPE_DATABASE triggered. Recreating database...");
+            Console.WriteLine(">>> WIPE_DATABASE=true detected. Recreating database...");
             await db.Database.EnsureDeletedAsync();
             await db.Database.MigrateAsync();
             Console.WriteLine(">>> Database recreated. Starting fresh seed...");

@@ -20,6 +20,12 @@ dist-desktop/
 frontend/.env
 frontend/.env.production
 
+# Production Secrets
+appsettings.Production.json
+
+# Local Uploads
+backend/OrkaEval.Api/wwwroot/avatars/*
+
 # OS
 .DS_Store
 Thumbs.db

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using OrkaEval.Api.Data;
 using OrkaEval.Api.Models;
 using OrkaEval.Api.Services;
+using OrkaEval.Api.Models.DTOs;
 using System.Security.Claims;
 
 namespace OrkaEval.Api.Controllers;
@@ -115,18 +116,7 @@ public class AuthController : ControllerBase
         return RedirectToFrontend(token, forceElectron);
     }
 
-    public class RegisterRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string DisplayName { get; set; } = string.Empty;
-        public string? Password { get; set; }
-        public DateTime StartDate { get; set; }
-        public string ProfileType { get; set; } = "candidate"; // candidate, coach, both
-        public string? Role { get; set; } // Alias for ProfileType
-        public string? GoogleId { get; set; }
-        public string? AvatarUrl { get; set; }
-        public int? CoachId { get; set; }
-    }
+
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest req)
@@ -238,11 +228,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    public class LoginRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
+
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest req)
@@ -311,10 +297,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    public class ForgotPasswordRequest
-    {
-        public string Email { get; set; } = string.Empty;
-    }
+
 
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest req)
@@ -344,11 +327,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "If the account exists, a reset link will be sent." });
     }
 
-    public class ResetPasswordRequest
-    {
-        public string Token { get; set; } = string.Empty;
-        public string NewPassword { get; set; } = string.Empty;
-    }
+
 
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest req)
@@ -493,12 +472,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    public class UpdateProfileRequest
-    {
-        public string? DisplayName { get; set; }
-        public string? Department { get; set; }
-        public string? AvatarUrl { get; set; }
-    }
+
 
     [Authorize]
     [HttpPut("profile")]
@@ -586,11 +560,7 @@ public class AuthController : ControllerBase
     }
 
 
-    public class UpdatePasswordRequest
-    {
-        public string CurrentPassword { get; set; } = string.Empty;
-        public string NewPassword { get; set; } = string.Empty;
-    }
+
 
     [Authorize]
     [HttpPut("password")]

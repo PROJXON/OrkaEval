@@ -1,0 +1,45 @@
+services:
+  api:
+    build:
+      context: ./backend/OrkaEval.Api
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=orkaeval;Username=postgres;Password=password123
+      - AllowedHosts=*
+      - Cors__AllowedOrigins__0=http://localhost:3000
+      # Add other environment variables here if needed (JWT, Cloudinary, etc.)
+      
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+      
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_DB=orkaeval
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

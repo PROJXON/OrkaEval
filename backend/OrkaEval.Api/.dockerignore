@@ -1,0 +1,9 @@
+bin/
+obj/
+orkaeval.db
+orkaeval.db-shm
+orkaeval.db-wal
+.vscode/
+.vs/
+*.user
+*.suo

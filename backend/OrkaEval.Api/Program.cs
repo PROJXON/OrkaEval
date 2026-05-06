@@ -184,6 +184,17 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 // ── Startup Data Initialization ───────────────────────────────────────────────
-await DataInitializer.InitializeAsync(app.Services, app.Environment);
+Console.WriteLine(">>> Starting Data Initialization...");
+try 
+{
+    await DataInitializer.InitializeAsync(app.Services, app.Environment);
+    Console.WriteLine(">>> Data Initialization successful.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($">>> Data Initialization failed: {ex.Message}");
+    Console.WriteLine(ex.StackTrace);
+}
 
+Console.WriteLine(">>> App starting...");
 app.Run();

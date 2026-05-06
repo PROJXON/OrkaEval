@@ -12,20 +12,31 @@ public static class DataInitializer
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         // 1. Run Migrations
+        Console.WriteLine(">>> Running Database Migrations...");
         await db.Database.MigrateAsync();
+        Console.WriteLine(">>> Migrations complete.");
 
         // 2. Schema Fix (Legacy)
+        Console.WriteLine(">>> Applying Legacy Schema Fixes...");
         try
         {
             await db.Database.ExecuteSqlRawAsync("ALTER TABLE Cycles ADD COLUMN Number INTEGER DEFAULT 1;");
+            Console.WriteLine(">>> Schema Fix applied (or already existed).");
         }
-        catch { /* Column already exists or table busy */ }
+        catch (Exception ex)
+        { 
+            Console.WriteLine($">>> Schema Fix non-critical error: {ex.Message}");
+        }
 
         // 3. Maintenance Logic (Cycle Generation)
+        Console.WriteLine(">>> Generating Missing Cycles...");
         await GenerateMissingCycles(db);
+        Console.WriteLine(">>> Cycle Generation complete.");
 
         // 4. Role Fix
+        Console.WriteLine(">>> Running Role Fix...");
         await db.Database.ExecuteSqlRawAsync("UPDATE Users SET Role = 'Candidate' WHERE Role = 'TeamMember'");
+        Console.WriteLine(">>> Role Fix complete.");
 
         // 5. Seed Data (Development Only)
         if (environment.IsDevelopment())

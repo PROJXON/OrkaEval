@@ -85,7 +85,7 @@ public static class DataInitializer
                 Email = email,
                 DisplayName = defaultName,
                 Role = UserRole.Both,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Jay@123"),
                 StartDate = DateTime.UtcNow
             };
             db.Users.Add(user);

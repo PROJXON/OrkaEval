@@ -235,7 +235,7 @@ function Dashboard() {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
           <div 
-            onClick={() => window.location.href = '/profile'} 
+            onClick={() => navigate('/profile')} 
             style={{ width: 44, height: 44, borderRadius: '14px', overflow: 'hidden', background: '#fff', border: '1px solid rgba(10,31,61,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
           >
             {user?.avatarUrl ? (

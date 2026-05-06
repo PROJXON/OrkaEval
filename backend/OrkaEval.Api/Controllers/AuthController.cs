@@ -19,14 +19,16 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _config;
     private readonly IAuditService _auditService;
     private readonly IWebHostEnvironment _env;
+    private readonly IImageService _imageService;
 
-    public AuthController(AppDbContext db, TokenService tokenService, IConfiguration config, IAuditService auditService, IWebHostEnvironment env)
+    public AuthController(AppDbContext db, TokenService tokenService, IConfiguration config, IAuditService auditService, IWebHostEnvironment env, IImageService imageService)
     {
         _db = db;
         _tokenService = tokenService;
         _config = config;
         _auditService = auditService;
         _env = env;
+        _imageService = imageService;
     }
 
     [HttpGet("coaches")]
@@ -539,11 +541,6 @@ public class AuthController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "No file uploaded." });
 
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-        var extension = Path.GetExtension(file.FileName).ToLower();
-        if (!allowedExtensions.Contains(extension))
-            return BadRequest(new { message = "Invalid file type." });
-
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdStr, out var userId))
             return Unauthorized();
@@ -551,20 +548,41 @@ public class AuthController : ControllerBase
         var user = await _db.Users.FindAsync(userId);
         if (user is null) return NotFound();
 
-        var fileName = $"{userId}_{DateTime.UtcNow.Ticks}{extension}";
-        var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars", fileName);
-
-        using (var stream = new FileStream(path, FileMode.Create))
+        try
         {
-            await file.CopyToAsync(stream);
+            // Upload to Cloudinary if configured, otherwise fallback to local (local will be ephemeral)
+            var cloudUrl = await _imageService.UploadImageAsync(file);
+            
+            if (!string.IsNullOrEmpty(cloudUrl))
+            {
+                user.AvatarUrl = cloudUrl;
+            }
+            else
+            {
+                // Fallback to local storage (for dev or if Cloudinary fails/not configured)
+                var extension = Path.GetExtension(file.FileName).ToLower();
+                var fileName = $"{userId}_{DateTime.UtcNow.Ticks}{extension}";
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars", fileName);
+                
+                if (!Directory.Exists(Path.GetDirectoryName(path)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+                user.AvatarUrl = $"/avatars/{fileName}";
+            }
+
+            await _db.SaveChangesAsync();
+            await _auditService.LogAsync(user.Id, "AvatarUpload", $"User uploaded new profile picture: {user.AvatarUrl}");
+
+            return Ok(new { avatarUrl = user.AvatarUrl });
         }
-
-        user.AvatarUrl = $"/avatars/{fileName}";
-        await _db.SaveChangesAsync();
-
-        await _auditService.LogAsync(user.Id, "AvatarUpload", $"User uploaded new profile picture: {fileName}");
-
-        return Ok(new { avatarUrl = user.AvatarUrl });
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = $"Upload failed: {ex.Message}" });
+        }
     }
 
 

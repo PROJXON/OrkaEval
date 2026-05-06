@@ -14,10 +14,21 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Force Kestrel to listen on 127.0.0.1 and allow large headers (fixes 431)
+// ── Kestrel Configuration ──────────────────────────────────────────────────
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.Listen(IPAddress.Loopback, 5000);
+    if (builder.Environment.IsDevelopment())
+    {
+        // Dev: bind to localhost:5000 only
+        serverOptions.Listen(IPAddress.Loopback, 5000);
+    }
+    else
+    {
+        // Production (Render): bind to 0.0.0.0 on the PORT env var (default 10000)
+        var port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "10000");
+        serverOptions.Listen(IPAddress.Any, port);
+    }
+    
     serverOptions.Limits.MaxRequestHeadersTotalSize = 1048576; // 1MB
 });
 
@@ -83,6 +94,7 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IEvaluationService, EvaluationService>();
+builder.Services.AddScoped<IImageService, CloudinaryService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

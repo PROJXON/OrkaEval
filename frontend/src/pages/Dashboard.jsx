@@ -14,6 +14,16 @@ function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
+  // Safety Check: If user context is not ready, show a premium loading state
+  if (!user) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--clr-bg)', color: 'var(--clr-text)' }}>
+        <Logo size={80} className="anim-pulse" />
+        <p style={{ marginTop: 20, fontSize: '1.1rem', fontWeight: 600, opacity: 0.6 }}>Loading OrkaEval...</p>
+      </div>
+    );
+  }
+
   const getServerUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;

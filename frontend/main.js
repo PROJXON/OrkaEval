@@ -18,10 +18,21 @@ async function loadRenderer(route = '') {
   if (!mainWindow) return;
 
   if (!isDev) {
-    if (route) {
-      await mainWindow.loadFile(path.join(__dirname, 'dist/index.html'), { hash: route });
-    } else {
-      await mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+    try {
+      const distPath = path.join(__dirname, 'dist/index.html');
+      const fs = require('fs');
+      if (fs.existsSync(distPath)) {
+        if (route) {
+          await mainWindow.loadFile(distPath, { hash: route });
+        } else {
+          await mainWindow.loadFile(distPath);
+        }
+      } else {
+        // Fallback to Live Site if dist is missing
+        await mainWindow.loadURL(`https://frontend-orkaeval.vercel.app${route ? '#/' + route : ''}`);
+      }
+    } catch (e) {
+      await mainWindow.loadURL(`https://frontend-orkaeval.vercel.app${route ? '#/' + route : ''}`);
     }
     return;
   }

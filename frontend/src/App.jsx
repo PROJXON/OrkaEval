@@ -57,7 +57,7 @@ function RequireAuth({ children }) {
     // 2. If running inside Electron, listen for token via IPC — only verify AFTER token is stored
     if (window.electron?.onAuthToken) {
       window.electron.onAuthToken((token) => {
-        console.log('App received token from Electron bridge:', token);
+
         saveToken(token);
         verify();
       });

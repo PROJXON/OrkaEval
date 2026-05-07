@@ -114,7 +114,6 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IEvaluationService, EvaluationService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IImageService, CloudinaryService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers()

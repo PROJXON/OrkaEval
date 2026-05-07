@@ -51,6 +51,7 @@ public class AnalyticsService : IAnalyticsService
             .ToListAsync();
 
         hub.GrowthTrends = allEvals
+            .Where(e => e.Cycle != null)
             .GroupBy(e => e.Cycle.Number)
             .Select(g => new GrowthDeltaDto
             {
@@ -87,8 +88,8 @@ public class AnalyticsService : IAnalyticsService
             e.Competencies.Leadership.EvaluatorRating,
             e.Competencies.GrowthLearning.EvaluatorRating,
             e.Competencies.Culture.EvaluatorRating
-        }.Where(s => s.HasValue && s.Value > 0).ToList();
+        }.Where(s => s.HasValue && s.Value > 0).Select(s => s!.Value).ToList();
 
-        return scores.Any() ? scores.Average(s => s.Value) : 0;
+        return scores.Any() ? scores.Average() : 0;
     }
 }

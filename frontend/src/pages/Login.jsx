@@ -43,8 +43,8 @@ function Login() {
         <div className="auth-bg__grid"></div>
       </div>
 
-      <div className="auth-container" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', maxWidth: '1100px', width: '100%', alignItems: 'center', gap: '80px', margin: '0 auto' }}>
-        <div className="auth-brand anim-float" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+      <div className="auth-container">
+        <div className="auth-brand anim-float">
           <Link to="/" style={{ textDecoration: 'none' }}>
             <Logo size={220} className="mb-4" />
           </Link>

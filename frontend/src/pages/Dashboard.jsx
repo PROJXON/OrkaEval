@@ -205,19 +205,9 @@ function Dashboard() {
   };
 
   return (
-    <div className="dashboard-page" style={{ minHeight: '100vh', background: 'var(--clr-bg)' }}>
-      <nav className="dashboard-nav" style={{ 
-        position: 'sticky', top: 0, zIndex: 100,
-        background: 'var(--clr-glass)', 
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--clr-border)',
-        padding: '0 40px',
-        height: '80px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <Link to="/dashboard" className="nav-brand" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+    <div className="dashboard-page">
+      <nav className="dashboard-nav">
+        <Link to="/dashboard" className="nav-brand" style={{ textDecoration: 'none' }}>
           <Logo size={48} />
         </Link>
         
@@ -259,7 +249,7 @@ function Dashboard() {
         </div>
       </nav>
 
-      <main className="dashboard-content">
+      <main className="dashboard-main anim-fade-in">
         <header className="content-header" style={{ marginBottom: '48px' }}>
           <div className="profile-info" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <h1 style={{ fontSize: '2.5rem', display: 'flex', alignItems: 'center', gap: '20px' }}>

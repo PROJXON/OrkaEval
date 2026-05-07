@@ -224,9 +224,8 @@ function Dashboard() {
           )}
           {viewRole !== 'Coach' && (
             <button 
-              className={`btn-nav ${showHistory ? 'active' : ''}`} 
+              className={`btn-history ${showHistory ? 'active' : ''}`} 
               onClick={() => setShowHistory(!showHistory)}
-              style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: showHistory ? 'var(--clr-navy)' : 'transparent', color: showHistory ? '#fff' : 'var(--clr-text)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
             >
               🕒 {showHistory ? 'Close History' : 'View History'}
             </button>

@@ -1404,6 +1404,33 @@ select.fi:focus, textarea.fi:focus, input.fi:focus {
   .form-grid { grid-template-columns: 1fr; }
 }
 
+.btn-history {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--clr-border);
+  background: var(--clr-surface);
+  color: var(--clr-text);
+}
+
+.btn-history:hover {
+  background: var(--clr-bg-2);
+  border-color: var(--clr-brand);
+}
+
+.btn-history.active {
+  background: var(--clr-brand);
+  color: #ffffff !important;
+  border-color: var(--clr-brand);
+  box-shadow: 0 4px 15px var(--clr-brand-glow);
+}
+
 .nav-brand {
   display: flex;
   align-items: center;

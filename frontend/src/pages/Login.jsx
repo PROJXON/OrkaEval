@@ -46,7 +46,9 @@ function Login() {
       <div className="auth-container">
         <div className="auth-brand anim-float">
           <Link to="/" style={{ textDecoration: 'none' }}>
-            <Logo size={220} className="mb-4" />
+            <div className="logo-container-premium">
+              <Logo size={140} />
+            </div>
           </Link>
           <p className="mono-tag" style={{ marginBottom: '16px' }}>Enterprise Performance OS</p>
           <p style={{ fontSize: '1.4rem', color: 'var(--clr-text-muted)', marginBottom: '48px', maxWidth: '450px', lineHeight: 1.4, fontWeight: 500 }}>

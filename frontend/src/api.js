@@ -30,8 +30,13 @@ export const saveSelfEvaluation = async (cycleId, payload) => {
 
 // Fetch Team Evaluations for Coach
 export const getTeamEvaluations = async (cycleId, params = {}) => {
-    const response = await api.get(`/evaluations/team/${cycleId}`, { params });
-    return response.data;
+    const res = await api.get(`/evaluations/team/${cycleId}`, { params });
+    return res.data;
+};
+
+export const getAnalyticsHubData = async (cycleId) => {
+    const res = await api.get(`/analytics/hub/${cycleId}`);
+    return res.data;
 };
 
 // Save Coach Review via DTO

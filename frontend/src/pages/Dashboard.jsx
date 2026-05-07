@@ -7,6 +7,7 @@ import { getCandidates, submitForm, getFormHistory } from '../api';
 import EvaluationContainer from '../components/forms/EvaluationContainer';
 import EvaluatorDashboard from '../components/forms/EvaluatorDashboard';
 import PerformanceReviewResults from '../components/forms/PerformanceReviewResults';
+import AnalyticsHub from '../components/AnalyticsHub';
 import Logo from '../components/Logo';
 
 function Dashboard() {
@@ -43,8 +44,7 @@ function Dashboard() {
   const [formData, setFormData] = useState({});
   const [selectedEvaluationId, setSelectedEvaluationId] = useState(null);
   const [msg, setMsg] = useState(null);
-
-  // Cycle calculation (8 weeks = 56 days)
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const cycleInfo = useMemo(() => {
     const programStartDate = "2026-03-01"; // Fixed program start date
     const start = new Date(programStartDate);
@@ -203,6 +203,13 @@ function Dashboard() {
     );
   };
 
+  const renderContent = () => {
+    if (showAnalytics) {
+      return <AnalyticsHub cycleId={cycleInfo.number} onBack={() => setShowAnalytics(false)} />;
+    }
+    return renderForm();
+  };
+
   return (
     <div className="dashboard-page">
       <nav className="dashboard-nav">
@@ -259,6 +266,15 @@ function Dashboard() {
               <span className="stat-tag" style={{ background: 'var(--clr-border)', color: 'var(--clr-text-muted)', padding: '6px 16px', borderRadius: '100px', fontSize: '0.8rem', fontWeight: 600 }}>
                 {viewRole === 'Coach' ? 'Active Program Cycle' : `Cycle ${cycleInfo.number}`}: {cycleInfo.start} - {cycleInfo.end}
               </span>
+              {viewRole === 'Coach' && !showAnalytics && (
+                <button 
+                  className="btn btn-brand btn-s" 
+                  onClick={() => setShowAnalytics(true)}
+                  style={{ borderRadius: '100px', padding: '6px 20px' }}
+                >
+                  Insights Hub 📊
+                </button>
+              )}
             </div>
           </div>
         </header>
@@ -268,7 +284,7 @@ function Dashboard() {
         <div className={`dashboard-grid ${showHistory ? 'with-history' : ''}`}>
           {/* Left Column: Form Space */}
           <section className="form-section">
-            {renderForm()}
+            {renderContent()}
           </section>
 
           {/* Right Column: History Panel */}

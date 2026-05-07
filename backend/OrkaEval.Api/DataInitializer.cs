@@ -12,7 +12,7 @@ public static class DataInitializer
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         // 1. Production Mode (Locked - Preserves User Data)
-        var shouldWipe = true; 
+        var shouldWipe = false; 
         
         if (shouldWipe)
         {

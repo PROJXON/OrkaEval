@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getAnalyticsHubData } from '../../api';
+import { useState, useEffect } from 'react';
+import { getAnalyticsHubData } from '../api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +13,7 @@ import {
   ArcElement,
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { handleApiError } from '../../utils/errorHandler';
+import { handleApiError } from '../utils/errorHandler';
 
 ChartJS.register(
   CategoryScale,

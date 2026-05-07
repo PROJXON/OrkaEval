@@ -55,15 +55,39 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
 
   if (!data) return null;
 
+  const isDark = document.body.classList.contains('dark-theme') || 
+                document.documentElement.getAttribute('data-theme') === 'dark';
+
+  const chartTextColor = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.6)';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: { 
+        display: false,
+        labels: { color: chartTextColor, font: { weight: 'bold' } }
+      },
+      tooltip: {
+        backgroundColor: isDark ? '#1e293b' : '#fff',
+        titleColor: isDark ? '#fff' : '#000',
+        bodyColor: isDark ? '#fff' : '#000',
+        borderColor: 'var(--clr-brand)',
+        borderWidth: 1
+      }
     },
     scales: {
-      y: { beginAtZero: true, max: 5, ticks: { stepSize: 1, color: 'var(--clr-text-muted)' }, grid: { color: 'var(--clr-border)' } },
-      x: { ticks: { color: 'var(--clr-text-muted)' }, grid: { display: false } }
+      y: { 
+        beginAtZero: true, 
+        max: 5, 
+        ticks: { stepSize: 1, color: chartTextColor }, 
+        grid: { color: gridColor } 
+      },
+      x: { 
+        ticks: { color: chartTextColor }, 
+        grid: { display: false } 
+      }
     }
   };
 
@@ -72,14 +96,22 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
     datasets: [{
       label: 'Average Rating',
       data: data.competencyHeatmap.map(c => c.averageRating),
-      backgroundColor: [
+      backgroundColor: isDark ? [
+        'rgba(34, 211, 238, 0.7)', // Cyan
+        'rgba(168, 85, 247, 0.7)', // Purple
+        'rgba(236, 72, 153, 0.7)', // Pink
+        'rgba(52, 211, 153, 0.7)', // Emerald
+        'rgba(251, 146, 60, 0.7)'  // Orange
+      ] : [
         'rgba(37, 99, 235, 0.8)',
         'rgba(99, 102, 241, 0.8)',
         'rgba(139, 92, 246, 0.8)',
         'rgba(236, 72, 153, 0.8)',
         'rgba(249, 115, 22, 0.8)'
       ],
-      borderRadius: 8,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'transparent'
     }]
   };
 
@@ -87,7 +119,8 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
     labels: ['Completed', 'In Progress', 'Not Started'],
     datasets: [{
       data: [data.submissionStats.completed, data.submissionStats.inProgress, data.submissionStats.notStarted],
-      backgroundColor: ['#22c55e', '#3b82f6', '#94a3b8'],
+      backgroundColor: ['#10b981', '#3b82f6', isDark ? '#334155' : '#94a3b8'],
+      hoverOffset: 15,
       borderWidth: 0,
     }]
   };
@@ -97,23 +130,53 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
     datasets: [{
       label: 'Team Average Score',
       data: data.growthTrends.map(g => g.averageOverallScore),
-      borderColor: '#2563eb',
-      backgroundColor: 'rgba(37, 99, 235, 0.1)',
+      borderColor: '#06b6d4',
+      backgroundColor: 'rgba(6, 182, 212, 0.1)',
       fill: true,
-      tension: 0.4,
-      pointRadius: 6,
-      pointBackgroundColor: '#2563eb'
+      tension: 0.5,
+      pointRadius: 8,
+      pointHoverRadius: 12,
+      pointBackgroundColor: '#06b6d4',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2
     }]
   };
 
   return (
     <div className="analytics-hub anim-fade-in" style={{ paddingBottom: '40px' }}>
-      <div className="card-hdr-flex" style={{ marginBottom: '32px' }}>
+      <div className="card-hdr-flex" style={{ marginBottom: '40px', background: isDark ? 'rgba(255,255,255,0.03)' : 'transparent', padding: '24px', borderRadius: '16px', border: '1px solid var(--clr-border)' }}>
         <div>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '4px' }}>Analytics Command Center</h2>
-          <p style={{ color: 'var(--clr-text-muted)' }}>Global Program Insights for Cycle {cycleId}</p>
+          <h2 style={{ fontSize: '1.8rem', marginBottom: '4px', color: 'var(--clr-text)' }}>Analytics Command Center</h2>
+          <p style={{ color: 'var(--clr-text-muted)', fontSize: '0.9rem' }}>Global Program Insights for Cycle {cycleId}</p>
         </div>
-        <button className="btn btn-ghost" onClick={onBack}>← Back to Dashboard</button>
+        <button className="btn-history" onClick={onBack} style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#fff' }}>
+          ← Back to Dashboard
+        </button>
+      </div>
+
+      {/* Actionable Insights Summary */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+        <div className="card-glass" style={{ padding: '24px', borderLeft: '4px solid #10b981' }}>
+          <span style={{ fontSize: '1.2rem', marginBottom: '8px', display: 'block' }}>🏆 Top Strength</span>
+          <h4 style={{ fontSize: '1.1rem', color: 'var(--clr-text)' }}>
+            {data.competencyHeatmap.sort((a,b) => b.averageRating - a.averageRating)[0]?.name || '—'}
+          </h4>
+          <p style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)', marginTop: '4px' }}>Highest team-wide rating</p>
+        </div>
+        <div className="card-glass" style={{ padding: '24px', borderLeft: '4px solid #f59e0b' }}>
+          <span style={{ fontSize: '1.2rem', marginBottom: '8px', display: 'block' }}>📍 Priority Focus</span>
+          <h4 style={{ fontSize: '1.1rem', color: 'var(--clr-text)' }}>
+            {data.competencyHeatmap.sort((a,b) => a.averageRating - b.averageRating)[0]?.name || '—'}
+          </h4>
+          <p style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)', marginTop: '4px' }}>Greatest growth opportunity</p>
+        </div>
+        <div className="card-glass" style={{ padding: '24px', borderLeft: '4px solid #3b82f6' }}>
+          <span style={{ fontSize: '1.2rem', marginBottom: '8px', display: 'block' }}>🚀 Growth Delta</span>
+          <h4 style={{ fontSize: '1.1rem', color: 'var(--clr-text)' }}>
+            +{Math.round((data.growthTrends[data.growthTrends.length-1]?.averageOverallScore - data.growthTrends[0]?.averageOverallScore) * 100) / 100 || '0'} Points
+          </h4>
+          <p style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)', marginTop: '4px' }}>Team improvement trend</p>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>

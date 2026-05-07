@@ -46,9 +46,8 @@ function Dashboard() {
 
   // Cycle calculation (8 weeks = 56 days)
   const cycleInfo = useMemo(() => {
-    const startDateStr = user?.startDate;
-    if (!startDateStr) return { start: '-', end: '-', number: 0 };
-    const start = new Date(startDateStr);
+    const programStartDate = "2026-03-01"; // Fixed program start date
+    const start = new Date(programStartDate);
     const now = new Date();
     const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
     const cycleNum = Math.floor(diffDays / 56) + 1;
@@ -258,7 +257,7 @@ function Dashboard() {
             </h1>
             <div className="profile-stats" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <span className="stat-tag" style={{ background: 'var(--clr-border)', color: 'var(--clr-text-muted)', padding: '6px 16px', borderRadius: '100px', fontSize: '0.8rem', fontWeight: 600 }}>
-                Cycle {cycleInfo.number}: {cycleInfo.start} - {cycleInfo.end}
+                {viewRole === 'Coach' ? 'Active Program Cycle' : `Cycle ${cycleInfo.number}`}: {cycleInfo.start} - {cycleInfo.end}
               </span>
             </div>
           </div>

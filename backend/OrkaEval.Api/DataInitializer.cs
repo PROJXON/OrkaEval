@@ -37,7 +37,7 @@ public static class DataInitializer
             Email = email,
             DisplayName = "Jagadeesh Madhineni",
             Role = UserRole.Both,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Jay@123"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Projxon@eval#2026"),
             StartDate = DateTime.UtcNow
         };
         db.Users.Add(user);

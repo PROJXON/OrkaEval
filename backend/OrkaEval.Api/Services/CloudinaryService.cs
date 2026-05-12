@@ -28,8 +28,10 @@ public class CloudinaryService : IImageService
 
         if (string.IsNullOrEmpty(cloudName) || string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(apiSecret))
         {
-            // Fallback for development if not configured
-            _cloudinary = new Cloudinary();
+            // Fallback for development if not configured - avoid parameterless constructor
+            // which can throw if an invalid CLOUDINARY_URL env var exists.
+            var dummyAccount = new Account("disabled", "disabled", "disabled");
+            _cloudinary = new Cloudinary(dummyAccount);
         }
         else
         {

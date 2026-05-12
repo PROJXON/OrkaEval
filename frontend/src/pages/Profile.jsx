@@ -16,6 +16,19 @@ export default function Profile() {
     displayName: user?.displayName || '',
   });
   const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl || null);
+  const [coaches, setCoaches] = useState([]);
+
+  useEffect(() => {
+    const fetchCoaches = async () => {
+      try {
+        const res = await api.get('/auth/coaches');
+        setCoaches(res.data);
+      } catch (err) {
+        console.error("Failed to load coaches", err);
+      }
+    };
+    fetchCoaches();
+  }, []);
 
   const getServerUrl = (url) => {
     if (!url) return null;
@@ -77,6 +90,20 @@ export default function Profile() {
       toast.success('Profile picture updated');
     } catch (err) {
       toast.error('Failed to upload picture');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCoachChange = async (coachId) => {
+    setLoading(true);
+    try {
+      const cid = coachId === "" ? null : parseInt(coachId);
+      const res = await api.put('/auth/profile/coach', { coachId: cid });
+      setUser(prev => ({ ...prev, coachId: res.data.coachId, coachName: res.data.coachName }));
+      toast.success('Coach updated successfully');
+    } catch (err) {
+      toast.error('Failed to update coach');
     } finally {
       setLoading(false);
     }
@@ -151,14 +178,38 @@ export default function Profile() {
               )}
             </div>
             <div>
-              <h3 style={{ marginBottom: 8, fontSize: '1.2rem' }}>Profile Picture</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)', marginBottom: 16 }}>Click to upload a new photo (max 2MB)</p>
+              <h3 style={{ marginBottom: 8, fontSize: '1.2rem' }}>{user?.displayName}</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)', marginBottom: 16 }}>Max 2MB</p>
               <label className="btn btn-brand" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem' }}>
-                Change Picture
+                {user?.avatarUrl ? 'Change Profile' : 'Upload Picture'}
                 <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} disabled={loading} />
               </label>
             </div>
           </div>
+
+          {/* Coach Selection Section */}
+          {(user?.role === 'Candidate' || user?.role === 'Both' || user?.Role === 'Both') && (
+            <div className="card-glass" style={{ padding: 32 }}>
+              <h3 style={{ marginBottom: 20, fontSize: '1.2rem' }}>Your Coach</h3>
+              <div className="form-group">
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Select or Change Coach</label>
+                <select
+                  value={user?.coachId || ''}
+                  onChange={(e) => handleCoachChange(e.target.value)}
+                  disabled={loading}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem' }}
+                >
+                  <option value="">Select a coach...</option>
+                  {coaches.map(c => (
+                    <option key={c.id} value={c.id}>{c.fullName}</option>
+                  ))}
+                </select>
+                <p style={{ fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginTop: 8 }}>
+                  Your coach will be able to review your performance and provide feedback.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Read-Only Info */}
           <div className="card-glass" style={{ padding: 32 }}>
@@ -168,10 +219,7 @@ export default function Profile() {
                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Email</label>
                 <div style={{ fontWeight: 600 }}>{user?.email}</div>
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Role</label>
-                <div style={{ fontWeight: 600 }}>{user?.role || user?.Role}</div>
-              </div>
+
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Start Date</label>
                 <div style={{ fontWeight: 600 }}>{new Date(user?.startDate).toLocaleDateString()}</div>

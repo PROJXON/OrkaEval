@@ -9,6 +9,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { setUser } = useUser();
@@ -51,25 +52,14 @@ function Login() {
             </div>
           </Link>
           <p className="mono-tag" style={{ marginBottom: '16px' }}>Enterprise Performance OS</p>
-          <p style={{ fontSize: '1.4rem', color: 'var(--clr-text-muted)', marginBottom: '48px', maxWidth: '450px', lineHeight: 1.4, fontWeight: 500 }}>
+          <p style={{ fontSize: '1.4rem', color: 'var(--clr-text-muted)', marginBottom: '24px', maxWidth: '450px', lineHeight: 1.4, fontWeight: 500 }}>
             Professional performance tracking and competency management for modern teams.
           </p>
+          <p style={{ fontSize: '0.95rem', color: 'var(--clr-text-subtle)', marginBottom: '48px', maxWidth: '450px', lineHeight: 1.6 }}>
+            OrkaEval is a comprehensive platform designed to streamline performance reviews, facilitate meaningful coaching conversations, and track professional growth across key competency areas. Empower your team with data-driven insights and clear development paths.
+          </p>
           
-          <div className="auth-features" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', width: '100%' }}>
-             {[
-               { icon: '🎯', t: 'Competency Mapping', d: 'Track 5-area growth cycles' },
-               { icon: '📊', t: 'JSON Analytics', d: 'Flexible form-based reporting' },
-               { icon: '🛡️', t: 'Enterprise Ready', d: 'Secure multi-role management' }
-             ].map(f => (
-               <div key={f.t} style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.4)', border: '1px solid rgba(10,31,61,0.05)' }}>
-                 <span style={{ fontSize: '1.8rem' }}>{f.icon}</span>
-                 <div style={{ textAlign: 'left' }}>
-                   <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--clr-navy)' }}>{f.t}</div>
-                   <div style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)' }}>{f.d}</div>
-                 </div>
-               </div>
-             ))}
-          </div>
+
         </div>
 
         <div className="auth-card" style={{ width: '100%' }}>
@@ -90,9 +80,9 @@ function Login() {
             </button>
 
             <div className="auth-card__divider" style={{ margin: '32px 0', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div className="divider-line" style={{ flex: 1, height: '1px' }}></div>
+              <div className="divider-line" style={{ flex: 1, height: '1px', background: 'var(--clr-border)' }}></div>
               <span className="mono-tag" style={{ fontSize: '0.7rem', color: 'var(--clr-text-muted)' }}>OR PASSWORD</span>
-              <div className="divider-line" style={{ flex: 1, height: '1px' }}></div>
+              <div className="divider-line" style={{ flex: 1, height: '1px', background: 'var(--clr-border)' }}></div>
             </div>
 
             {error && <div style={{ color: '#ef4444', background: '#fef2f2', padding: '16px', borderRadius: '12px', fontSize: '0.9rem', marginBottom: '24px', border: '1px solid #fee2e2' }}>{error}</div>}
@@ -105,18 +95,36 @@ function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', outline: 'none', background: '#fff' }}
+                  style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid var(--clr-border)', fontSize: '1rem', outline: 'none', background: 'var(--clr-surface)', color: 'var(--clr-text)' }}
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ position: 'relative' }}>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', outline: 'none', background: '#fff' }}
+                  style={{ width: '100%', padding: '16px', paddingRight: '48px', borderRadius: '12px', border: '1px solid var(--clr-border)', fontSize: '1rem', outline: 'none', background: 'var(--clr-surface)', color: 'var(--clr-text)' }}
                 />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--clr-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  )}
+                </button>
               </div>
               <div style={{ textAlign: 'right', marginTop: '-12px' }}>
                 <Link to="/forgot-password" style={{ fontSize: '0.85rem', color: 'var(--clr-azure)', textDecoration: 'none', fontWeight: 700 }}>

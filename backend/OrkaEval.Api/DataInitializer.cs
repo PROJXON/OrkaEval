@@ -22,7 +22,7 @@ public static class DataInitializer
         }
         else 
         {
-            await db.Database.MigrateAsync();
+            await db.Database.EnsureCreatedAsync();
         }
 
         // 2. Seed Admin Data
@@ -32,6 +32,9 @@ public static class DataInitializer
     private static async Task SeedCoreData(AppDbContext db)
     {
         var email = "jagadeesh.madhineni.projxon@gmail.com";
+        var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (existingUser != null) return;
+
         var user = new User
         {
             Email = email,

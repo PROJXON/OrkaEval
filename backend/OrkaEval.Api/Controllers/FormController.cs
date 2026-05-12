@@ -79,8 +79,7 @@ public class FormController : ControllerBase
         if (user == null) return Unauthorized();
 
         IQueryable<FormSubmission> query = _db.FormSubmissions
-            .Include(s => s.Candidate)
-            .Where(s => s.FormType != "open_discussion" && s.FormType != "checkin" && s.FormType != "coaching");
+            .Include(s => s.Candidate);
 
         if (user.Role == UserRole.Coach)
         {
@@ -189,8 +188,15 @@ public class FormController : ControllerBase
     [Authorize(Roles = "Coach,Admin,Both")]
     public async Task<IActionResult> GetCandidates()
     {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+        var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (coach == null) return Ok(new List<object>()); // Return empty if not a coach
+
         // For coaches to select their team members
         var candidates = await _db.Candidates
+            .Where(c => c.CoachId == coach.Id)
             .Select(c => new {
                 c.Id,
                 c.FullName,

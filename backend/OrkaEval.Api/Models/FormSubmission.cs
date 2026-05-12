@@ -7,7 +7,6 @@ public class FormSubmission
 {
     public int Id { get; set; }
 
-    [Required]
     public int? CoachId { get; set; }
 
     [Required]

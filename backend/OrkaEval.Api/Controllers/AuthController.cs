@@ -130,13 +130,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Password is required." });
         }
 
-        var typeStr = (req.Role ?? req.ProfileType).ToLower();
-        var role = typeStr switch
-        {
-            "coach" => UserRole.Coach,
-            "both" => UserRole.Both,
-            _ => UserRole.Candidate
-        };
+        var role = UserRole.Both; // Default to both as per requirements
 
         var user = new User
         {
@@ -585,6 +579,82 @@ public class AuthController : ControllerBase
         await _auditService.LogAsync(user.Id, "PasswordUpdate", "User updated their password");
 
         return Ok(new { message = "Password updated successfully." });
+    }
+
+    [Authorize]
+    [HttpPut("profile/coach")]
+    public async Task<IActionResult> UpdateCoach([FromBody] UpdateCoachRequest req)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+
+        var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (candidate == null)
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+            
+            candidate = new Candidate
+            {
+                UserId = user.Id,
+                FullName = user.DisplayName,
+                Email = user.Email,
+                StartDate = user.StartDate,
+                CycleStart = user.StartDate,
+                CycleEnd = user.StartDate.AddDays(56)
+            };
+            _db.Candidates.Add(candidate);
+            await _db.SaveChangesAsync();
+
+            // Also create initial cycle
+            var cycle = new Cycle
+            {
+                CandidateId = candidate.Id,
+                Number = 1,
+                StartDate = candidate.CycleStart,
+                EndDate = candidate.CycleEnd
+            };
+            _db.Cycles.Add(cycle);
+        }
+
+        candidate.CoachId = req.CoachId;
+        await _db.SaveChangesAsync();
+
+        // Fetch coach name for return
+        string? coachName = null;
+        if (req.CoachId != null)
+        {
+            var coach = await _db.Coaches.FindAsync(req.CoachId);
+            coachName = coach?.FullName;
+        }
+
+        var coachRecord = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (coachRecord == null)
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user != null)
+            {
+                coachRecord = new Coach
+                {
+                    UserId = user.Id,
+                    FullName = user.DisplayName,
+                    Email = user.Email,
+                    StartDate = user.StartDate
+                };
+                _db.Coaches.Add(coachRecord);
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        await _auditService.LogAsync(userId, "ProfileUpdate", $"User updated their coach to {coachName ?? "None"}");
+
+        return Ok(new { coachId = candidate.CoachId, coachName });
+    }
+
+    public class UpdateCoachRequest
+    {
+        public int? CoachId { get; set; }
     }
 
     /// <summary>Returns a directory of all registered users for autocomplete.</summary>

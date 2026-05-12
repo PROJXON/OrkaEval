@@ -55,8 +55,24 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
 
   if (!data) return null;
 
-  const isDark = document.body.classList.contains('dark-theme') || 
-                document.documentElement.getAttribute('data-theme') === 'dark';
+  const [isDark, setIsDark] = useState(
+    document.body.classList.contains('dark-theme') || 
+    document.documentElement.getAttribute('data-theme') === 'dark'
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(
+        document.body.classList.contains('dark-theme') || 
+        document.documentElement.getAttribute('data-theme') === 'dark'
+      );
+    });
+    
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const chartTextColor = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.6)';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
@@ -144,12 +160,19 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
 
   return (
     <div className="analytics-hub anim-fade-in" style={{ paddingBottom: '40px' }}>
-      <div className="card-hdr-flex" style={{ marginBottom: '40px', background: isDark ? 'rgba(255,255,255,0.03)' : 'transparent', padding: '24px', borderRadius: '16px', border: '1px solid var(--clr-border)' }}>
+      <div className="card-hdr-flex" style={{ 
+        marginBottom: '40px', 
+        background: 'var(--clr-bg-2)', 
+        padding: '24px', 
+        borderRadius: '20px', 
+        border: '1px solid var(--clr-border)',
+        boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.4)' : 'none'
+      }}>
         <div>
           <h2 style={{ fontSize: '1.8rem', marginBottom: '4px', color: 'var(--clr-text)' }}>Analytics Command Center</h2>
           <p style={{ color: 'var(--clr-text-muted)', fontSize: '0.9rem' }}>Global Program Insights for Cycle {cycleId}</p>
         </div>
-        <button className="btn-history" onClick={onBack} style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#fff' }}>
+        <button className="btn btn-ghost" onClick={onBack} style={{ background: 'var(--clr-surface)', color: 'var(--clr-text)', borderRadius: '12px', border: '1px solid var(--clr-border)' }}>
           ← Back to Dashboard
         </button>
       </div>
@@ -159,14 +182,14 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
         <div className="card-glass" style={{ padding: '24px', borderLeft: '4px solid #10b981' }}>
           <span style={{ fontSize: '1.2rem', marginBottom: '8px', display: 'block' }}>🏆 Top Strength</span>
           <h4 style={{ fontSize: '1.1rem', color: 'var(--clr-text)' }}>
-            {data.competencyHeatmap.sort((a,b) => b.averageRating - a.averageRating)[0]?.name || '—'}
+            {[...data.competencyHeatmap].sort((a,b) => b.averageRating - a.averageRating)[0]?.name || '—'}
           </h4>
           <p style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)', marginTop: '4px' }}>Highest team-wide rating</p>
         </div>
         <div className="card-glass" style={{ padding: '24px', borderLeft: '4px solid #f59e0b' }}>
           <span style={{ fontSize: '1.2rem', marginBottom: '8px', display: 'block' }}>📍 Priority Focus</span>
           <h4 style={{ fontSize: '1.1rem', color: 'var(--clr-text)' }}>
-            {data.competencyHeatmap.sort((a,b) => a.averageRating - b.averageRating)[0]?.name || '—'}
+            {[...data.competencyHeatmap].sort((a,b) => a.averageRating - b.averageRating)[0]?.name || '—'}
           </h4>
           <p style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)', marginTop: '4px' }}>Greatest growth opportunity</p>
         </div>

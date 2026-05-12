@@ -167,6 +167,27 @@ function Dashboard() {
 
     return (
       <div className="form-selector">
+        {viewRole === 'Coach' && (
+          <div className="card-glass mb-8" style={{ padding: '24px', border: '1px solid var(--clr-brand-subtle)' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px', color: 'var(--clr-brand)' }}>
+              SELECT TEAM MEMBER TO REVIEW / CONDUCT SESSION
+            </label>
+            <select
+              value={selectedCandidateId}
+              onChange={(e) => setSelectedCandidateId(e.target.value)}
+              className="fi"
+              style={{ maxWidth: '400px' }}
+            >
+              <option value="">-- Choose a team member --</option>
+              {candidates.map(c => (
+                <option key={c.id} value={c.id}>{c.fullName}</option>
+              ))}
+            </select>
+            <p style={{ fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginTop: '8px' }}>
+              Select a candidate first, then choose a session type below.
+            </p>
+          </div>
+        )}
         <div className="form-grid">
           {viewRole === 'Candidate' ? (
             <div className="form-card card-glass active" onClick={() => { setActiveForm('performance_review'); setShowEvaluation(true); }}>
@@ -176,25 +197,61 @@ function Dashboard() {
             </div>
           ) : (
             <>
-              <div className="form-card card-glass" onClick={() => { setActiveForm('open_discussion'); setShowEvaluation(true); }}>
-                <div className="form-card__icon">🗣️</div>
+              <div 
+                className={`form-card card-glass ${selectedCandidateId ? 'active' : 'disabled'}`} 
+                onClick={() => { 
+                  if (!selectedCandidateId) return;
+                  setActiveForm('open_discussion'); 
+                  setShowEvaluation(true); 
+                }}
+                style={{ cursor: selectedCandidateId ? 'pointer' : 'not-allowed', opacity: selectedCandidateId ? 1 : 0.6 }}
+              >
+                <div className="form-card__icon">🤝</div>
                 <h3>Open Discussion</h3>
                 <p>Casual sync or specific topic deep-dive</p>
+                {!selectedCandidateId && <span style={{ fontSize: '0.7rem', color: 'var(--clr-re)', fontWeight: 700 }}>SELECT CANDIDATE FIRST</span>}
               </div>
-              <div className="form-card card-glass" onClick={() => { setActiveForm('checkin'); setShowEvaluation(true); }}>
+              <div 
+                className={`form-card card-glass ${selectedCandidateId ? 'active' : 'disabled'}`} 
+                onClick={() => { 
+                  if (!selectedCandidateId) return;
+                  setActiveForm('checkin'); 
+                  setShowEvaluation(true); 
+                }}
+                style={{ cursor: selectedCandidateId ? 'pointer' : 'not-allowed', opacity: selectedCandidateId ? 1 : 0.6 }}
+              >
                 <div className="form-card__icon">👋</div>
                 <h3>Weekly Check-In</h3>
                 <p>Quick pulse check and alignment</p>
+                {!selectedCandidateId && <span style={{ fontSize: '0.7rem', color: 'var(--clr-re)', fontWeight: 700 }}>SELECT CANDIDATE FIRST</span>}
               </div>
-              <div className="form-card card-glass" onClick={() => { setActiveForm('coaching'); setShowEvaluation(true); }}>
+              <div 
+                className={`form-card card-glass ${selectedCandidateId ? 'active' : 'disabled'}`} 
+                onClick={() => { 
+                  if (!selectedCandidateId) return;
+                  setActiveForm('coaching'); 
+                  setShowEvaluation(true); 
+                }}
+                style={{ cursor: selectedCandidateId ? 'pointer' : 'not-allowed', opacity: selectedCandidateId ? 1 : 0.6 }}
+              >
                 <div className="form-card__icon">🧠</div>
                 <h3>Coaching Session</h3>
                 <p>Skill development and feedback</p>
+                {!selectedCandidateId && <span style={{ fontSize: '0.7rem', color: 'var(--clr-re)', fontWeight: 700 }}>SELECT CANDIDATE FIRST</span>}
               </div>
-              <div className="form-card card-glass" onClick={() => { setActiveForm('performance_review'); setShowEvaluation(true); }}>
+              <div 
+                className={`form-card card-glass ${selectedCandidateId ? 'active' : 'disabled'}`} 
+                onClick={() => { 
+                  if (!selectedCandidateId) return;
+                  setActiveForm('performance_review'); 
+                  setShowEvaluation(true); 
+                }}
+                style={{ cursor: selectedCandidateId ? 'pointer' : 'not-allowed', opacity: selectedCandidateId ? 1 : 0.6 }}
+              >
                 <div className="form-card__icon">⚖️</div>
                 <h3>Team Reviews</h3>
                 <p>Review and sign-off on team evaluations</p>
+                {!selectedCandidateId && <span style={{ fontSize: '0.7rem', color: 'var(--clr-re)', fontWeight: 700 }}>SELECT CANDIDATE FIRST</span>}
               </div>
             </>
           )}

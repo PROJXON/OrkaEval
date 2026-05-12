@@ -147,9 +147,18 @@ function SessionFacilitator({ data, onChange, type = 'discussion' }) {
             </div>
 
             <div className="phase-body">
-              {activePhase === 0 && type === 'discussion' && (
+              {(activePhase === 0) && (
                 <div className="ice-breaker-box">
-                  <span className="ib-ico">{iceBreaker?.i}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                    <span className="ib-ico">{iceBreaker?.i}</span>
+                    <button 
+                      className="btn-ghost" 
+                      onClick={() => setIceBreaker(ICE_BREAKERS[Math.floor(Math.random() * ICE_BREAKERS.length)])}
+                      style={{ padding: '4px 8px', fontSize: '0.7rem', opacity: 0.7 }}
+                    >
+                      🔄 Change Question
+                    </button>
+                  </div>
                   <p className="ib-q">{iceBreaker?.q}</p>
                   <p className="ib-sub">Use this time to settle in and set a positive tone.</p>
                 </div>
@@ -187,7 +196,12 @@ function SessionFacilitator({ data, onChange, type = 'discussion' }) {
 
       <div className="facilitator-grid mt-6">
         {phases.map((p, idx) => (
-          <div key={p.id} className={`ph-grid-item ${activePhase === idx ? 'active' : ''} ${activePhase > idx ? 'done' : ''}`}>
+          <div 
+            key={p.id} 
+            className={`ph-grid-item ${activePhase === idx ? 'active' : ''} ${activePhase > idx ? 'done' : ''}`}
+            onClick={() => activePhase !== -1 && setActivePhase(idx)}
+            style={{ cursor: activePhase === -1 ? 'default' : 'pointer' }}
+          >
             <div className="pg-hdr">
               <span>Phase {p.id}</span>
               <span>{formatTime(p.dur)}</span>

@@ -14,13 +14,14 @@ public class AnalyticsService : IAnalyticsService
         _db = db;
     }
 
-    public async Task<AnalyticsHubDto> GetHubDataAsync(int cycleId)
+    public async Task<AnalyticsHubDto> GetHubDataAsync(int cycleNumber)
     {
         var hub = new AnalyticsHubDto();
 
-        // 1. Competency Heatmap (Average of Evaluator Ratings in the specified cycle)
+        // 1. Competency Heatmap (Average of Evaluator Ratings in the specified cycle number)
         var evalsInCycle = await _db.Evaluations
-            .Where(e => e.CycleId == cycleId && e.Status >= EvaluationStatus.EvaluatorCompleted)
+            .Include(e => e.Cycle)
+            .Where(e => e.Cycle != null && e.Cycle.Number == cycleNumber && e.Status >= EvaluationStatus.EvaluatorCompleted)
             .ToListAsync();
 
         hub.CompetencyHeatmap = new List<CompetencyAverageDto>
@@ -34,7 +35,10 @@ public class AnalyticsService : IAnalyticsService
 
         // 2. Submission Stats
         var totalCandidates = await _db.Candidates.CountAsync();
-        var evals = await _db.Evaluations.Where(e => e.CycleId == cycleId).ToListAsync();
+        var evals = await _db.Evaluations
+            .Include(e => e.Cycle)
+            .Where(e => e.Cycle != null && e.Cycle.Number == cycleNumber)
+            .ToListAsync();
 
         hub.SubmissionStats = new SubmissionStatsDto
         {
@@ -52,7 +56,7 @@ public class AnalyticsService : IAnalyticsService
 
         hub.GrowthTrends = allEvals
             .Where(e => e.Cycle != null)
-            .GroupBy(e => e.Cycle.Number)
+            .GroupBy(e => e.Cycle!.Number)
             .Select(g => new GrowthDeltaDto
             {
                 CycleNumber = g.Key,

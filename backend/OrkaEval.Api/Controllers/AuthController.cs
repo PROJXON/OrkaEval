@@ -36,7 +36,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> GetAvailableCoaches()
     {
         var coaches = await _db.Coaches
-            .Select(c => new { c.Id, c.FullName })
+            .Select(c => new { c.Id, c.FullName, c.UserId })
             .ToListAsync();
         return Ok(coaches);
     }

@@ -200,7 +200,7 @@ export default function Profile() {
                   style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem' }}
                 >
                   <option value="">Select a coach...</option>
-                  {coaches.map(c => (
+                  {coaches.filter(c => c.userId !== user?.id).map(c => (
                     <option key={c.id} value={c.id}>{c.fullName}</option>
                   ))}
                 </select>

@@ -488,6 +488,9 @@ public class AuthController : ControllerBase
         if (!string.IsNullOrWhiteSpace(req.AvatarUrl))
             user.AvatarUrl = req.AvatarUrl;
 
+        if (req.NotificationsEnabled.HasValue)
+            user.NotificationsEnabled = req.NotificationsEnabled.Value;
+
         await _db.SaveChangesAsync();
         await _auditService.LogAsync(user.Id, "ProfileUpdate", "User updated profile details");
 
@@ -498,6 +501,7 @@ public class AuthController : ControllerBase
             user.DisplayName,
             user.AvatarUrl,
             user.Department,
+            user.NotificationsEnabled,
             Role = user.Role.ToString()
         });
     }

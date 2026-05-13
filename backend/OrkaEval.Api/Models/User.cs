@@ -25,6 +25,7 @@ public class User
     public string? PasswordHash { get; set; }
 
     public UserRole Role { get; set; } = UserRole.Candidate;
+    public bool NotificationsEnabled { get; set; } = true;
 
     public DateTime StartDate { get; set; } = DateTime.UtcNow;
 

@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Evaluation> Evaluations => Set<Evaluation>();
     public DbSet<FormSubmission> FormSubmissions => Set<FormSubmission>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

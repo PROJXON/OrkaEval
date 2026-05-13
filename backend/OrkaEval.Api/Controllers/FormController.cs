@@ -68,6 +68,28 @@ public class FormController : ControllerBase
         _db.FormSubmissions.Add(submission);
         await _db.SaveChangesAsync();
 
+        // Create notification for the candidate if submitted by coach
+        if (user.Role == UserRole.Coach || user.Role == UserRole.Both)
+        {
+            var notification = new Notification
+            {
+                UserId = candidateId, // Note: candidateId here is the Candidate.Id, but UserId in Notification refers to User.Id
+                Title = "New Session Submitted",
+                Message = $"Coach {user.DisplayName} has submitted a new {req.FormType.Replace("_", " ")} record.",
+                Type = "Session",
+                Link = $"/dashboard?view=history&id={submission.Id}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var targetCandidate = await _db.Candidates.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == candidateId);
+            if (targetCandidate != null && targetCandidate.User != null && targetCandidate.User.NotificationsEnabled)
+            {
+                notification.UserId = targetCandidate.UserId;
+                _db.Notifications.Add(notification);
+                await _db.SaveChangesAsync();
+            }
+        }
+
         return Ok(new { message = "Form submitted successfully.", id = submission.Id });
     }
 
@@ -205,9 +227,35 @@ public class FormController : ControllerBase
                 c.CycleStart,
                 c.CycleEnd
             })
-            .ToListAsync();
-
         return Ok(candidates);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSubmission(int id)
+    {
+        var userId = GetCurrentUserId();
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null) return Unauthorized();
+
+        var submission = await _db.FormSubmissions
+            .Include(s => s.Candidate)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (submission == null) return NotFound();
+
+        // Check permission: Coach or Candidate must be involved
+        if (user.Role == UserRole.Coach)
+        {
+            var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (coach == null || submission.CoachId != coach.Id) return Forbid();
+        }
+        else
+        {
+            var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (candidate == null || submission.CandidateId != candidate.Id) return Forbid();
+        }
+
+        return Ok(submission);
     }
 }
 

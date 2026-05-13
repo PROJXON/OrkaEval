@@ -7,7 +7,9 @@ import { getCandidates, submitForm, getFormHistory } from '../api';
 import EvaluationContainer from '../components/forms/EvaluationContainer';
 import EvaluatorDashboard from '../components/forms/EvaluatorDashboard';
 import PerformanceReviewResults from '../components/forms/PerformanceReviewResults';
+import FormSubmissionViewer from '../components/forms/FormSubmissionViewer';
 import AnalyticsHub from '../components/AnalyticsHub';
+import NotificationBell from '../components/NotificationBell';
 import Logo from '../components/Logo';
 
 function Dashboard() {
@@ -33,6 +35,7 @@ function Dashboard() {
   const [showHistory, setShowHistory] = useState(false);
   const [formData, setFormData] = useState({});
   const [selectedEvaluationId, setSelectedEvaluationId] = useState(null);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
   const [msg, setMsg] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const cycleInfo = useMemo(() => {
@@ -147,6 +150,15 @@ function Dashboard() {
           <PerformanceReviewResults 
             evaluationId={selectedEvaluationId} 
             onBack={() => setShowEvaluation(false)} 
+          />
+        );
+      }
+
+      if (activeForm === 'view_submission') {
+        return (
+          <FormSubmissionViewer 
+            submissionId={selectedSubmissionId}
+            onBack={() => setShowEvaluation(false)}
           />
         );
       }
@@ -285,6 +297,7 @@ function Dashboard() {
               Switch to {viewRole === 'Candidate' ? 'Coach' : 'Candidate'}
             </button>
           )}
+          <NotificationBell />
           {viewRole !== 'Coach' && (
             <button 
               className={`btn-history ${showHistory ? 'active' : ''}`} 
@@ -377,7 +390,7 @@ function Dashboard() {
                         </span>
                       </div>
 
-                      {item.isEvaluation && (
+                      {item.isEvaluation ? (
                         <button 
                           className="btn btn-brand btn-s" 
                           style={{ width: '100%', marginTop: '4px', fontSize: '12px', padding: '8px' }}
@@ -388,6 +401,18 @@ function Dashboard() {
                           }}
                         >
                           View Results →
+                        </button>
+                      ) : (
+                        <button 
+                          className="btn btn-brand btn-s" 
+                          style={{ width: '100%', marginTop: '4px', fontSize: '12px', padding: '8px' }}
+                          onClick={() => {
+                            setSelectedSubmissionId(item.id);
+                            setActiveForm('view_submission');
+                            setShowEvaluation(true);
+                          }}
+                        >
+                          View Record →
                         </button>
                       )}
                     </div>

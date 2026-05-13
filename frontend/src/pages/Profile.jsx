@@ -14,6 +14,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
+    notificationsEnabled: user?.notificationsEnabled ?? true
   });
   const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl || null);
   const [coaches, setCoaches] = useState([]);
@@ -57,8 +58,11 @@ export default function Profile() {
 
     setLoading(true);
     try {
-      await api.put('/auth/profile', { displayName: formData.displayName });
-      setUser(prev => ({ ...prev, displayName: formData.displayName }));
+      const response = await api.put('/auth/profile', { 
+        displayName: formData.displayName,
+        notificationsEnabled: formData.notificationsEnabled
+      });
+      setUser(prev => ({ ...prev, ...response.data }));
       toast.success('Profile updated successfully');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update profile');
@@ -245,6 +249,21 @@ export default function Profile() {
                   onChange={e => setFormData({ ...formData, displayName: e.target.value })}
                   style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem' }}
                 />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0' }}>
+                <input 
+                  type="checkbox" 
+                  id="notifToggle"
+                  checked={formData.notificationsEnabled}
+                  onChange={e => setFormData({ ...formData, notificationsEnabled: e.target.checked })}
+                  style={{ width: 20, height: 20, cursor: 'pointer' }}
+                />
+                <label htmlFor="notifToggle" style={{ fontSize: '0.9rem', cursor: 'pointer', userSelect: 'none' }}>
+                  Enable session notifications
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--clr-text-muted)', marginTop: 2 }}>
+                    Receive alerts when your coach submits a record for you
+                  </span>
+                </label>
               </div>
               <button 
                 type="submit" 

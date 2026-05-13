@@ -74,8 +74,29 @@ export const getFormHistory = async (candidateId) => {
     return response.data;
 };
 
+export const getFormSubmissionById = async (id) => {
+    const response = await api.get(`/forms/${id}`);
+    return response.data;
+};
+
 export const getCandidates = async () => {
     const response = await api.get('/forms/candidates');
+    return response.data;
+};
+
+// Notifications
+export const getNotifications = async () => {
+    const response = await api.get('/notifications');
+    return response.data;
+};
+
+export const markNotificationAsRead = async (id) => {
+    const response = await api.put(`/notifications/${id}/read`);
+    return response.data;
+};
+
+export const markAllNotificationsAsRead = async () => {
+    const response = await api.put('/notifications/read-all');
     return response.data;
 };
 

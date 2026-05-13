@@ -15,16 +15,6 @@ function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
-  // Safety Check: If user context is not ready, show a premium loading state
-  if (!user) {
-    return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--clr-bg)', color: 'var(--clr-text)' }}>
-        <Logo size={80} className="anim-pulse" />
-        <p style={{ marginTop: 20, fontSize: '1.1rem', fontWeight: 600, opacity: 0.6 }}>Loading OrkaEval...</p>
-      </div>
-    );
-  }
-
   const getServerUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
@@ -87,6 +77,16 @@ function Dashboard() {
     }
     loadHistory();
   }, [viewRole, userRole, loadCandidates, loadHistory]);
+
+  // Safety Check: If user context is not ready, show a premium loading state
+  if (!user) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--clr-bg)', color: 'var(--clr-text)' }}>
+        <Logo size={80} className="anim-pulse" />
+        <p style={{ marginTop: 20, fontSize: '1.1rem', fontWeight: 600, opacity: 0.6 }}>Loading OrkaEval...</p>
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     clearToken();
@@ -298,7 +298,7 @@ function Dashboard() {
           </button>
           <div 
             onClick={() => navigate('/profile')} 
-            style={{ width: 44, height: 44, borderRadius: '14px', overflow: 'hidden', background: '#fff', border: '1px solid rgba(10,31,61,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+            style={{ width: 44, height: 44, borderRadius: '14px', overflow: 'hidden', background: 'var(--clr-surface)', border: '1px solid var(--clr-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
           >
             {user?.avatarUrl ? (
               <img 

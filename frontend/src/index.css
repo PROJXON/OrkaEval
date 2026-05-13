@@ -155,6 +155,41 @@
   color: var(--clr-text-subtle);
 }
 
+[data-theme="dark"] select,
+[data-theme="dark"] input[type="date"] {
+  background: var(--clr-surface-2);
+  color: var(--clr-text);
+  border-color: var(--clr-border);
+  color-scheme: dark;
+}
+
+[data-theme="dark"] select option {
+  background: var(--clr-bg-2);
+  color: var(--clr-text);
+}
+
+[data-theme="dark"] .btn-google {
+  background: var(--clr-surface-2);
+  color: var(--clr-text);
+  border: 1px solid var(--clr-border);
+}
+
+[data-theme="dark"] .card-glass {
+  background: var(--clr-surface);
+  border-color: var(--clr-border);
+}
+
+[data-theme="dark"] .form-card {
+  background: var(--clr-surface);
+}
+
+[data-theme="dark"] .history-item {
+  border-color: var(--clr-border);
+}
+
+[data-theme="dark"] .btn-nav--switcher {
+  border-color: var(--clr-border) !important;
+}
 /* Theme toggle button */
 .theme-toggle {
   display: flex;

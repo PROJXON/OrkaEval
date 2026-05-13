@@ -85,7 +85,7 @@ function Login() {
               <div className="divider-line" style={{ flex: 1, height: '1px', background: 'var(--clr-border)' }}></div>
             </div>
 
-            {error && <div style={{ color: '#ef4444', background: '#fef2f2', padding: '16px', borderRadius: '12px', fontSize: '0.9rem', marginBottom: '24px', border: '1px solid #fee2e2' }}>{error}</div>}
+            {error && <div style={{ color: '#fca5a5', background: 'rgba(239, 68, 68, 0.1)', padding: '16px', borderRadius: '12px', fontSize: '0.9rem', marginBottom: '24px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>{error}</div>}
 
             <form onSubmit={handlePasswordLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div className="form-group">

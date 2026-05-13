@@ -197,7 +197,9 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
         <div className="card-glass" style={{ padding: '24px', borderLeft: '4px solid #3b82f6' }}>
           <span style={{ fontSize: '1.2rem', marginBottom: '8px', display: 'block' }}>🚀 Growth Delta</span>
           <h4 style={{ fontSize: '1.1rem', color: 'var(--clr-text)' }}>
-            +{Math.round((data.growthTrends[data.growthTrends.length-1]?.averageOverallScore - data.growthTrends[0]?.averageOverallScore) * 100) / 100 || '0'} Points
+            +{data.growthTrends.length >= 2 
+              ? Math.round((data.growthTrends[data.growthTrends.length-1]?.averageOverallScore - data.growthTrends[0]?.averageOverallScore) * 100) / 100 
+              : '0'} Points
           </h4>
           <p style={{ fontSize: '0.85rem', color: 'var(--clr-text-muted)', marginTop: '4px' }}>Team improvement trend</p>
         </div>

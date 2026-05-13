@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
@@ -6,48 +6,25 @@ import Logo from '../components/Logo';
 
 function Register() {
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
     password: '',
     startDate: new Date().toISOString().split('T')[0],
-    profileType: 'both',
-    coachId: ''
+    profileType: 'both'
   });
-  const [coaches, setCoaches] = useState([]);
   const navigate = useNavigate();
-
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  useEffect(() => {
-    const fetchCoaches = async () => {
-      try {
-        const res = await api.get('/auth/coaches');
-        setCoaches(res.data);
-      } catch (err) {
-        console.error("Failed to load coaches", err);
-      }
-    };
-    fetchCoaches();
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Clean data before sending
-      const submissionData = { ...formData };
-      if (submissionData.coachId === '') {
-        delete submissionData.coachId;
-      } else {
-        submissionData.coachId = parseInt(submissionData.coachId);
-      }
-
-      await api.post('/auth/register', submissionData);
+      await api.post('/auth/register', formData);
       toast.success('Registration successful! Please login.');
       navigate('/');
     } catch (err) {
@@ -75,7 +52,7 @@ function Register() {
                 <Logo size={140} className="mb-4" />
               </Link>
               <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px' }}>Create Account</h2>
-              <p style={{ fontSize: '0.95rem' }}>Join the OrkaEval Performance Review Platform</p>
+              <p style={{ fontSize: '0.95rem', color: 'var(--clr-text-muted)' }}>Join the OrkaEval Performance Review Platform</p>
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -85,10 +62,10 @@ function Register() {
                   name="displayName"
                   type="text"
                   required
-                  placeholder="Kill Bill"
+                  placeholder="Your full name"
                   value={formData.displayName}
                   onChange={handleChange}
-                  style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-bg-2)', color: 'var(--clr-text)', fontSize: '1rem', outline: 'none' }}
+                  style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem', outline: 'none' }}
                 />
               </div>
 
@@ -98,10 +75,10 @@ function Register() {
                   name="email"
                   type="email"
                   required
-                  placeholder="killbill@gmail.com"
+                  placeholder="you@example.com"
                   value={formData.email}
                   onChange={handleChange}
-                  style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-bg-2)', color: 'var(--clr-text)', fontSize: '1rem', outline: 'none' }}
+                  style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem', outline: 'none' }}
                 />
               </div>
 
@@ -114,7 +91,7 @@ function Register() {
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
-                  style={{ width: '100%', padding: '14px', paddingRight: '48px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-bg-2)', color: 'var(--clr-text)', fontSize: '1rem', outline: 'none' }}
+                  style={{ width: '100%', padding: '14px', paddingRight: '48px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem', outline: 'none' }}
                 />
                 <button 
                   type="button" 
@@ -136,21 +113,17 @@ function Register() {
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div className="form-group">
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: 'var(--clr-text-muted)' }}>START DATE</label>
-                  <input
-                    name="startDate"
-                    type="date"
-                    required
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-bg-2)', color: 'var(--clr-text)', fontSize: '0.9rem', outline: 'none' }}
-                  />
-                </div>
+              <div className="form-group">
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: 'var(--clr-text-muted)' }}>START DATE</label>
+                <input
+                  name="startDate"
+                  type="date"
+                  required
+                  value={formData.startDate}
+                  onChange={handleChange}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '0.9rem', outline: 'none' }}
+                />
               </div>
-
-
 
               <button
                 type="submit"

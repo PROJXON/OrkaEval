@@ -32,6 +32,24 @@ ChartJS.register(
 const AnalyticsHub = ({ cycleId, onBack }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDark, setIsDark] = useState(
+    document.body.classList.contains('dark-theme') || 
+    document.documentElement.getAttribute('data-theme') === 'dark'
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(
+        document.body.classList.contains('dark-theme') || 
+        document.documentElement.getAttribute('data-theme') === 'dark'
+      );
+    });
+    
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,25 +74,6 @@ const AnalyticsHub = ({ cycleId, onBack }) => {
   }
 
   if (!data) return null;
-
-  const [isDark, setIsDark] = useState(
-    document.body.classList.contains('dark-theme') || 
-    document.documentElement.getAttribute('data-theme') === 'dark'
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(
-        document.body.classList.contains('dark-theme') || 
-        document.documentElement.getAttribute('data-theme') === 'dark'
-      );
-    });
-    
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-    
-    return () => observer.disconnect();
-  }, []);
 
   const chartTextColor = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.6)';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';

@@ -192,28 +192,26 @@ export default function Profile() {
           </div>
 
           {/* Coach Selection Section */}
-          {(user?.role === 'Candidate' || user?.role === 'Both' || user?.Role === 'Both') && (
-            <div className="card-glass" style={{ padding: 32 }}>
-              <h3 style={{ marginBottom: 20, fontSize: '1.2rem' }}>Your Coach</h3>
-              <div className="form-group">
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Select or Change Coach</label>
-                <select
-                  value={user?.coachId || ''}
-                  onChange={(e) => handleCoachChange(e.target.value)}
-                  disabled={loading}
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem' }}
-                >
-                  <option value="">Select a coach...</option>
-                  {coaches.filter(c => c.userId !== user?.id).map(c => (
-                    <option key={c.id} value={c.id}>{c.fullName}</option>
-                  ))}
-                </select>
-                <p style={{ fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginTop: 8 }}>
-                  Your coach will be able to review your performance and provide feedback.
-                </p>
-              </div>
+          <div className="card-glass" style={{ padding: 32 }}>
+            <h3 style={{ marginBottom: 20, fontSize: '1.2rem' }}>Your Coach</h3>
+            <div className="form-group">
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Select or Change Coach</label>
+              <select
+                value={user?.coachId || ''}
+                onChange={(e) => handleCoachChange(e.target.value)}
+                disabled={loading}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem' }}
+              >
+                <option value="">Select a coach...</option>
+                {coaches.filter(c => c.userId !== user?.id).map(c => (
+                  <option key={c.id} value={c.id}>{c.fullName}</option>
+                ))}
+              </select>
+              <p style={{ fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginTop: 8 }}>
+                Your coach will be able to review your performance and provide feedback.
+              </p>
             </div>
-          )}
+          </div>
 
           {/* Read-Only Info */}
           <div className="card-glass" style={{ padding: 32 }}>

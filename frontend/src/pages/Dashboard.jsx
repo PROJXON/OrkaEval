@@ -287,16 +287,19 @@ function Dashboard() {
         </Link>
         
         <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          {(user?.role === 'Both' || user?.Role === 'Both') && (
-            <button 
-              className="btn-nav btn-nav--switcher"
-              onClick={() => setViewRole(viewRole === 'Candidate' ? 'Coach' : 'Candidate')}
-              style={{ padding: '10px 20px', borderRadius: '12px', border: '1px solid rgba(10,31,61,0.1)', background: 'var(--clr-surface)', color: 'var(--clr-text)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              <span style={{ fontSize: '1.2rem' }}>🔄</span>
-              Switch to {viewRole === 'Candidate' ? 'Coach' : 'Candidate'}
-            </button>
-          )}
+          <button 
+            className="btn-nav btn-nav--switcher"
+            onClick={() => {
+              setViewRole(viewRole === 'Candidate' ? 'Coach' : 'Candidate');
+              setActiveForm('performance_review');
+              setShowEvaluation(false);
+              setSelectedCandidateId('');
+            }}
+            style={{ padding: '10px 20px', borderRadius: '12px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface)', color: 'var(--clr-text)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>🔄</span>
+            Switch to {viewRole === 'Candidate' ? 'Coach' : 'Candidate'}
+          </button>
           <NotificationBell />
           {viewRole !== 'Coach' && (
             <button 

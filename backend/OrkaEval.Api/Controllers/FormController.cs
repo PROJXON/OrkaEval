@@ -226,7 +226,7 @@ public class FormController : ControllerBase
                 c.StartDate,
                 c.CycleStart,
                 c.CycleEnd
-            })
+            }).ToListAsync();
         return Ok(candidates);
     }
 

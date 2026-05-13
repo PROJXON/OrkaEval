@@ -23,6 +23,54 @@ public static class DataInitializer
         else 
         {
             await db.Database.EnsureCreatedAsync();
+            
+            // ── Manual Schema Updates (since EnsureCreated doesn't handle migrations) ──
+            try
+            {
+                // 1. Ensure Notifications table exists (though EnsureCreated should handle new tables if missing)
+                // 2. Ensure NotificationsEnabled column exists in Users table
+                var isPostgres = db.Database.IsNpgsql();
+                if (isPostgres)
+                {
+                    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"NotificationsEnabled\" BOOLEAN DEFAULT TRUE;");
+                    await db.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS ""Notifications"" (
+                            ""Id"" SERIAL PRIMARY KEY,
+                            ""UserId"" INTEGER NOT NULL REFERENCES ""Users""(""Id"") ON DELETE CASCADE,
+                            ""Title"" TEXT NOT NULL,
+                            ""Message"" TEXT NOT NULL,
+                            ""IsRead"" BOOLEAN NOT NULL DEFAULT FALSE,
+                            ""CreatedAt"" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            ""Link"" TEXT,
+                            ""Type"" TEXT
+                        );
+                    ");
+                }
+                else
+                {
+                    // SQLite
+                    try { await db.Database.ExecuteSqlRawAsync("ALTER TABLE Users ADD COLUMN NotificationsEnabled INTEGER DEFAULT 1;"); } catch { }
+                    try { 
+                        await db.Database.ExecuteSqlRawAsync(@"
+                            CREATE TABLE IF NOT EXISTS Notifications (
+                                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                UserId INTEGER NOT NULL,
+                                Title TEXT NOT NULL,
+                                Message TEXT NOT NULL,
+                                IsRead INTEGER NOT NULL DEFAULT 0,
+                                CreatedAt TEXT NOT NULL,
+                                Link TEXT,
+                                Type TEXT,
+                                FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                            );
+                        "); 
+                    } catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($">>> Schema Update Warning: {ex.Message}");
+            }
         }
 
         // 2. Seed Admin Data

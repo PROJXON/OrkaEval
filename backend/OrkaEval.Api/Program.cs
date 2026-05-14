@@ -18,6 +18,23 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.FileProviders;
 using OrkaEval.Api;
 
+public class GoogleOAuthLoggingHandler : DelegatingHandler
+{
+    public GoogleOAuthLoggingHandler(HttpMessageHandler innerHandler) : base(innerHandler) { }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var reqBody = request.Content != null ? await request.Content.ReadAsStringAsync(cancellationToken) : "none";
+        var response = await base.SendAsync(request, cancellationToken);
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var resBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new Exception($"TOKEN_EXCHANGE_FAILED! \nReq URI: {request.RequestUri} \nReq Body: {reqBody} \nRes Body: {resBody}");
+        }
+        return response;
+    }
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -255,5 +272,3 @@ catch (Exception ex)
 
 Console.WriteLine(">>> App starting...");
 app.Run();
-p u b l i c   c l a s s   G o o g l e O A u t h L o g g i n g H a n d l e r   :   D e l e g a t i n g H a n d l e r   {   p u b l i c   G o o g l e O A u t h L o g g i n g H a n d l e r ( H t t p M e s s a g e H a n d l e r   i n n e r H a n d l e r )   :   b a s e ( i n n e r H a n d l e r )   {   }   p r o t e c t e d   o v e r r i d e   a s y n c   T a s k < H t t p R e s p o n s e M e s s a g e >   S e n d A s y n c ( H t t p R e q u e s t M e s s a g e   r e q u e s t ,   C a n c e l l a t i o n T o k e n   c a n c e l l a t i o n T o k e n )   {   v a r   r e q B o d y   =   r e q u e s t . C o n t e n t   ! =   n u l l   ?   a w a i t   r e q u e s t . C o n t e n t . R e a d A s S t r i n g A s y n c ( c a n c e l l a t i o n T o k e n )   :   " n o n e " ;   v a r   r e s p o n s e   =   a w a i t   b a s e . S e n d A s y n c ( r e q u e s t ,   c a n c e l l a t i o n T o k e n ) ;   i f   ( ! r e s p o n s e . I s S u c c e s s S t a t u s C o d e )   {   v a r   r e s B o d y   =   a w a i t   r e s p o n s e . C o n t e n t . R e a d A s S t r i n g A s y n c ( c a n c e l l a t i o n T o k e n ) ;   t h r o w   n e w   E x c e p t i o n ( $ " T O K E N _ E X C H A N G E _ F A I L E D !   \ n R e q   U R I :   { r e q u e s t . R e q u e s t U r i }   \ n R e q   B o d y :   { r e q B o d y }   \ n R e s   B o d y :   { r e s B o d y } " ) ;   }   r e t u r n   r e s p o n s e ;   }   }  
- 

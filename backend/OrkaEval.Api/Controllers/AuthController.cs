@@ -103,7 +103,10 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"Internal server error during Google Callback: {ex.Message} \n\n StackTrace: {ex.StackTrace}");
+            var msg = $"CRITICAL ERROR in GoogleCallback: {ex.Message} \n\n StackTrace: {ex.StackTrace}";
+            // Pad to ensure Chrome doesn't hide it
+            msg += new string(' ', 1024);
+            return Content(msg, "text/plain");
         }
     }
 

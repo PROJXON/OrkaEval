@@ -105,14 +105,14 @@ builder.Services
         options.SaveTokens = true;
         options.Scope.Add("profile");
 
-        options.Events.OnRemoteFailure = context =>
+        options.Events.OnRemoteFailure = async context =>
         {
-            context.Response.StatusCode = 500;
+            context.Response.StatusCode = 400;
             context.Response.ContentType = "text/plain";
             var errorMsg = $"OAuth Middleware Error: {context.Failure?.Message}\n\nStack Trace:\n{context.Failure?.StackTrace}";
-            context.Response.WriteAsync(errorMsg).Wait();
+            errorMsg += new string(' ', 1024); // Pad to ensure Chrome doesn't hide it
+            await context.Response.WriteAsync(errorMsg);
             context.HandleResponse();
-            return Task.CompletedTask;
         };
     });
 

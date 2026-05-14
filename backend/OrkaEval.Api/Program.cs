@@ -110,13 +110,16 @@ builder.Services
             context.Response.StatusCode = 400;
             context.Response.ContentType = "text/plain";
             var secret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+            var clientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
             var secretPreview = secret.Length > 4 ? secret.Substring(0, 4) + "..." : "empty/too short";
+            var clientIdPreview = clientId.Length > 15 ? clientId.Substring(0, 15) + "..." : clientId;
             var req = context.Request;
 
             var errorMsg = $"OAuth Middleware Error: {context.Failure?.Message}\n\n" +
                            $"--- DIAGNOSTICS ---\n" +
                            $"Request Scheme: {req.Scheme}\n" +
                            $"Request Host: {req.Host}\n" +
+                           $"Client ID starts with: {clientIdPreview}\n" +
                            $"Secret starts with: {secretPreview}\n" +
                            $"Secret Length: {secret.Length}\n" +
                            $"-------------------\n\n" +

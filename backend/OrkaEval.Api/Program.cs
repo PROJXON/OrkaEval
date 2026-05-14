@@ -109,6 +109,7 @@ builder.Services
         options.CallbackPath = "/api/auth/google/callback";
         options.SaveTokens = true;
         options.Scope.Add("profile");
+        options.UsePkce = false; // Render free tier restarts destroy in-memory PKCE state
 
         options.Backchannel = new HttpClient(new GoogleOAuthLoggingHandler(new HttpClientHandler()));
 

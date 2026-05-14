@@ -1,7 +1,12 @@
+using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
-using System.Net;
-using System.IO;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -11,8 +16,25 @@ using System.Text.Json.Serialization;
 using OrkaEval.Api.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.AspNetCore.HttpOverrides;
 using OrkaEval.Api;
+
+public class GoogleOAuthLoggingHandler : DelegatingHandler
+{
+    public GoogleOAuthLoggingHandler(HttpMessageHandler innerHandler) : base(innerHandler) { }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var reqBody = request.Content != null ? await request.Content.ReadAsStringAsync(cancellationToken) : "none";
+        var response = await base.SendAsync(request, cancellationToken);
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var resBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new Exception($"TOKEN_EXCHANGE_FAILED! \nReq URI: {request.RequestUri} \nReq Body: {reqBody} \nRes Body: {resBody}");
+        }
+        return response;
+    }
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -104,6 +126,8 @@ builder.Services
         options.CallbackPath = "/api/auth/google/callback";
         options.SaveTokens = true;
         options.Scope.Add("profile");
+
+        options.Backchannel = new HttpClient(new GoogleOAuthLoggingHandler(new HttpClientHandler()));
 
         options.Events.OnRemoteFailure = async context =>
         {

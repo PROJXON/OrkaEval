@@ -45,28 +45,6 @@ public class AuthController : ControllerBase
     [HttpGet("google")]
     public async Task<IActionResult> SignInWithGoogle([FromQuery] string? returnUrl = null)
     {
-        // ── DEV MOCK BYPASS ───────────────────────────────────────────────────
-        if (_config["Authentication:Google:ClientId"] == "mock-client-id")
-        {
-            var devUser = await _db.Users.FirstOrDefaultAsync(u => u.Email == "dev@orkaeval.local");
-            if (devUser == null)
-            {
-                devUser = new User
-                {
-                    Email = "dev@orkaeval.local",
-                    DisplayName = "Dev Orka",
-                    Role = UserRole.Both,
-                    AvatarUrl = "https://ui-avatars.com/api/?name=Dev+Orka&background=00BFA5&color=fff"
-                };
-                _db.Users.Add(devUser);
-                await _db.SaveChangesAsync();
-            }
-            var devToken = _tokenService.GenerateToken(devUser);
-            await _auditService.LogAsync(devUser.Id, "UserLogin", "Dev mock login");
-            return RedirectToFrontend(devToken, true);
-        }
-        // ─────────────────────────────────────────────────────────────────────
-
         var desktop = string.Equals(returnUrl, "electron", StringComparison.OrdinalIgnoreCase) ? "1" : null;
         var callbackUrl = Url.Action(nameof(GoogleCallback), "Auth", new { desktop }, Request.Scheme)!;
         var properties = new AuthenticationProperties
@@ -125,7 +103,7 @@ public class AuthController : ControllerBase
         var existing = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == req.Email);
         if (existing != null) return BadRequest(new { message = "Email already in use." });
 
-        if (string.IsNullOrWhiteSpace(req.Password))
+        if (string.IsNullOrWhiteSpace(req.Password) && string.IsNullOrWhiteSpace(req.GoogleId))
         {
             return BadRequest(new { message = "Password is required." });
         }

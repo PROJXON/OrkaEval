@@ -59,39 +59,52 @@ public class AuthController : ControllerBase
     [HttpGet("google/callback")]
     public async Task<IActionResult> GoogleCallback([FromQuery] string? desktop = null)
     {
-        var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
-        if (!result.Succeeded)
+        try 
         {
-            return Redirect($"{GetFrontendUrl()}/?error=auth_failed");
+            var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+            if (!result.Succeeded)
+            {
+                var failureMessage = result.Failure?.Message ?? "Unknown authentication failure";
+                return BadRequest($"Authentication failed: {failureMessage}");
+            }
+            var forceElectron = string.Equals(desktop, "1", StringComparison.OrdinalIgnoreCase);
+
+            var principal = result.Principal!;
+            var googleId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var email = principal.FindFirstValue(ClaimTypes.Email);
+            var displayName = principal.FindFirstValue(ClaimTypes.Name) ?? email ?? "Unknown User";
+            var avatarUrl = principal.Claims
+                .FirstOrDefault(c => c.Type.Contains("picture") || c.Type == "urn:google:picture")?.Value;
+
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(googleId))
+            {
+                return BadRequest("Google didn't provide required email or ID.");
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user is null)
+            {
+                // NEW USER: Redirect to the frontend registration page with their Google info pre-filled
+                var registerUrl = $"{GetFrontendUrl()}/register?email={Uri.EscapeDataString(email)}&name={Uri.EscapeDataString(displayName)}&googleId={googleId}&avatarUrl={Uri.EscapeDataString(avatarUrl ?? "")}";
+                return Redirect(registerUrl);
+            }
+
+            // RETURNING USER
+            user.GoogleId ??= googleId;
+            user.AvatarUrl = avatarUrl;
+            user.DisplayName = displayName; // Optional: update display name from Google
+            user.LastLoginAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+            await _auditService.LogAsync(user.Id, "UserLogin", "Google OAuth login");
+
+            var token = _tokenService.GenerateToken(user);
+            return RedirectToFrontend(token, forceElectron);
         }
-        var forceElectron = string.Equals(desktop, "1", StringComparison.OrdinalIgnoreCase);
-
-        var principal = result.Principal!;
-        var googleId = principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var email = principal.FindFirstValue(ClaimTypes.Email)!;
-        var displayName = principal.FindFirstValue(ClaimTypes.Name) ?? email;
-        var avatarUrl = principal.Claims
-            .FirstOrDefault(c => c.Type.Contains("picture") || c.Type == "urn:google:picture")?.Value;
-
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (user is null)
+        catch (Exception ex)
         {
-            // NEW USER: Redirect to the frontend registration page with their Google info pre-filled
-            var registerUrl = $"{GetFrontendUrl()}/register?email={Uri.EscapeDataString(email)}&name={Uri.EscapeDataString(displayName)}&googleId={googleId}&avatarUrl={Uri.EscapeDataString(avatarUrl ?? "")}";
-            return Redirect(registerUrl);
+            return StatusCode(500, $"Internal server error during Google Callback: {ex.Message} \n\n StackTrace: {ex.StackTrace}");
         }
-
-        // RETURNING USER
-        user.GoogleId ??= googleId;
-        user.AvatarUrl = avatarUrl;
-        user.DisplayName = displayName; // Optional: update display name from Google
-        user.LastLoginAt = DateTime.UtcNow;
-
-        await _db.SaveChangesAsync();
-        await _auditService.LogAsync(user.Id, "UserLogin", "Google OAuth login");
-
-        var token = _tokenService.GenerateToken(user);
-        return RedirectToFrontend(token, forceElectron);
     }
 
 

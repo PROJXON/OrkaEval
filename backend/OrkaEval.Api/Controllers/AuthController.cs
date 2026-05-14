@@ -85,7 +85,7 @@ public class AuthController : ControllerBase
             if (user is null)
             {
                 // NEW USER: Redirect to the frontend registration page with their Google info pre-filled
-                var registerUrl = $"{GetFrontendUrl()}/register?email={Uri.EscapeDataString(email)}&name={Uri.EscapeDataString(displayName)}&googleId={googleId}&avatarUrl={Uri.EscapeDataString(avatarUrl ?? "")}";
+                var registerUrl = $"{GetFrontendUrl()}/#/register?email={Uri.EscapeDataString(email)}&name={Uri.EscapeDataString(displayName)}&googleId={googleId}&avatarUrl={Uri.EscapeDataString(avatarUrl ?? "")}";
                 return Redirect(registerUrl);
             }
 

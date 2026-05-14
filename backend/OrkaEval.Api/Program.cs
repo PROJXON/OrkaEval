@@ -104,6 +104,16 @@ builder.Services
         options.CallbackPath = "/api/auth/google/callback";
         options.SaveTokens = true;
         options.Scope.Add("profile");
+
+        options.Events.OnRemoteFailure = context =>
+        {
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "text/plain";
+            var errorMsg = $"OAuth Middleware Error: {context.Failure?.Message}\n\nStack Trace:\n{context.Failure?.StackTrace}";
+            context.Response.WriteAsync(errorMsg).Wait();
+            context.HandleResponse();
+            return Task.CompletedTask;
+        };
     });
 
 builder.Services.AddAuthorization();

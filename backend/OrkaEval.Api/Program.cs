@@ -16,25 +16,7 @@ using System.Text.Json.Serialization;
 using OrkaEval.Api.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.FileProviders;
-using OrkaEval.Api;
 
-public class GoogleOAuthLoggingHandler : DelegatingHandler
-{
-    public GoogleOAuthLoggingHandler(HttpMessageHandler innerHandler) : base(innerHandler) { }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        var reqBody = request.Content != null ? await request.Content.ReadAsStringAsync(cancellationToken) : "none";
-        var response = await base.SendAsync(request, cancellationToken);
-        
-        if (!response.IsSuccessStatusCode)
-        {
-            var resBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new Exception($"TOKEN_EXCHANGE_FAILED! \nReq URI: {request.RequestUri} \nReq Body: {reqBody} \nRes Body: {resBody}");
-        }
-        return response;
-    }
-}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -272,3 +254,21 @@ catch (Exception ex)
 
 Console.WriteLine(">>> App starting...");
 app.Run();
+
+public class GoogleOAuthLoggingHandler : DelegatingHandler
+{
+    public GoogleOAuthLoggingHandler(HttpMessageHandler innerHandler) : base(innerHandler) { }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var reqBody = request.Content != null ? await request.Content.ReadAsStringAsync(cancellationToken) : "none";
+        var response = await base.SendAsync(request, cancellationToken);
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var resBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new Exception($"TOKEN_EXCHANGE_FAILED! \nReq URI: {request.RequestUri} \nReq Body: {reqBody} \nRes Body: {resBody}");
+        }
+        return response;
+    }
+}

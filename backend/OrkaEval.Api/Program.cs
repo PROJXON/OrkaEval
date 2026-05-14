@@ -109,7 +109,18 @@ builder.Services
         {
             context.Response.StatusCode = 400;
             context.Response.ContentType = "text/plain";
-            var errorMsg = $"OAuth Middleware Error: {context.Failure?.Message}\n\nStack Trace:\n{context.Failure?.StackTrace}";
+            var secret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+            var secretPreview = secret.Length > 4 ? secret.Substring(0, 4) + "..." : "empty/too short";
+            var req = context.Request;
+
+            var errorMsg = $"OAuth Middleware Error: {context.Failure?.Message}\n\n" +
+                           $"--- DIAGNOSTICS ---\n" +
+                           $"Request Scheme: {req.Scheme}\n" +
+                           $"Request Host: {req.Host}\n" +
+                           $"Secret starts with: {secretPreview}\n" +
+                           $"Secret Length: {secret.Length}\n" +
+                           $"-------------------\n\n" +
+                           $"Stack Trace:\n{context.Failure?.StackTrace}";
             errorMsg += new string(' ', 1024); // Pad to ensure Chrome doesn't hide it
             await context.Response.WriteAsync(errorMsg);
             context.HandleResponse();

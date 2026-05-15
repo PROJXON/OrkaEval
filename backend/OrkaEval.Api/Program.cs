@@ -98,45 +98,11 @@ builder.Services
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "OrkaEvalUsers",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
-    })
-    .AddGoogle(options =>
-    {
-        var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
-        var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-
-        options.ClientId = string.IsNullOrWhiteSpace(googleClientId) ? "placeholder" : googleClientId;
-        options.ClientSecret = string.IsNullOrWhiteSpace(googleClientSecret) ? "placeholder" : googleClientSecret;
-        options.CallbackPath = "/api/auth/google/callback";
-        options.SaveTokens = true;
-        options.Scope.Add("profile");
-        options.UsePkce = false; // Render free tier restarts destroy in-memory PKCE state
-
-        options.Backchannel = new HttpClient(new GoogleOAuthLoggingHandler(new HttpClientHandler()));
-
-        options.Events.OnRemoteFailure = async context =>
-        {
-            context.Response.StatusCode = 400;
-            context.Response.ContentType = "text/plain";
-            var secret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
-            var clientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-            var secretPreview = secret.Length > 4 ? secret.Substring(0, 4) + "..." : "empty/too short";
-            var clientIdPreview = clientId.Length > 15 ? clientId.Substring(0, 15) + "..." : clientId;
-            var req = context.Request;
-
-            var errorMsg = $"OAuth Middleware Error: {context.Failure?.Message}\n\n" +
-                           $"--- DIAGNOSTICS ---\n" +
-                           $"Request Scheme: {req.Scheme}\n" +
-                           $"Request Host: {req.Host}\n" +
-                           $"Client ID starts with: {clientIdPreview}\n" +
-                           $"Secret starts with: {secretPreview}\n" +
-                           $"Secret Length: {secret.Length}\n" +
-                           $"-------------------\n\n" +
-                           $"Stack Trace:\n{context.Failure?.StackTrace}";
-            errorMsg += new string(' ', 1024); // Pad to ensure Chrome doesn't hide it
-            await context.Response.WriteAsync(errorMsg);
-            context.HandleResponse();
-        };
     });
+
+// Register a plain HttpClient for manual Google OAuth token exchange
+builder.Services.AddHttpClient("google");
+
 
 builder.Services.AddAuthorization();
 builder.Services.AddMemoryCache();
@@ -257,20 +223,3 @@ catch (Exception ex)
 Console.WriteLine(">>> App starting...");
 app.Run();
 
-public class GoogleOAuthLoggingHandler : DelegatingHandler
-{
-    public GoogleOAuthLoggingHandler(HttpMessageHandler innerHandler) : base(innerHandler) { }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        var reqBody = request.Content != null ? await request.Content.ReadAsStringAsync(cancellationToken) : "none";
-        var response = await base.SendAsync(request, cancellationToken);
-        
-        if (!response.IsSuccessStatusCode)
-        {
-            var resBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new Exception($"TOKEN_EXCHANGE_FAILED! \nReq URI: {request.RequestUri} \nReq Body: {reqBody} \nRes Body: {resBody}");
-        }
-        return response;
-    }
-}

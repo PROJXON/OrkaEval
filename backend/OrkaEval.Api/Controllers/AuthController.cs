@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +6,8 @@ using OrkaEval.Api.Models;
 using OrkaEval.Api.Services;
 using OrkaEval.Api.Models.DTOs;
 using System.Security.Claims;
+using System.Net.Http;
+using System.Text.Json;
 
 namespace OrkaEval.Api.Controllers;
 
@@ -41,70 +41,118 @@ public class AuthController : ControllerBase
         return Ok(coaches);
     }
 
-    /// <summary>Initiates the Google OAuth flow.</summary>
+    /// <summary>Initiates the Google OAuth flow manually — no ASP.NET Core middleware.</summary>
     [HttpGet("google")]
-    public async Task<IActionResult> SignInWithGoogle([FromQuery] string? returnUrl = null)
+    public IActionResult SignInWithGoogle([FromQuery] string? returnUrl = null)
     {
-        var desktop = string.Equals(returnUrl, "electron", StringComparison.OrdinalIgnoreCase) ? "1" : null;
-        var callbackUrl = Url.Action(nameof(GoogleCallback), "Auth", new { desktop }, Request.Scheme)!;
-        var properties = new AuthenticationProperties
-        {
-            RedirectUri = callbackUrl,
-            Items = { { "returnUrl", returnUrl ?? "/" } }
-        };
-        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        var clientId = _config["Authentication:Google:ClientId"] ?? throw new InvalidOperationException("Google ClientId not configured");
+        var desktop = string.Equals(returnUrl, "electron", StringComparison.OrdinalIgnoreCase) ? "1" : "0";
+
+        // Build the callback URL using the forwarded scheme/host
+        var scheme = Request.Scheme;
+        var host = Request.Host.Value;
+        var callbackUrl = $"{scheme}://{host}/api/auth/google/callback?desktop={desktop}";
+
+        var googleAuthUrl = "https://accounts.google.com/o/oauth2/v2/auth" +
+            $"?client_id={Uri.EscapeDataString(clientId)}" +
+            $"&redirect_uri={Uri.EscapeDataString(callbackUrl)}" +
+            "&response_type=code" +
+            "&scope=openid%20email%20profile" +
+            "&access_type=offline";
+
+        return Redirect(googleAuthUrl);
     }
 
-    /// <summary>Handles the Google OAuth callback, logs the user in if they exist, or redirects to register.</summary>
+    /// <summary>Handles the Google OAuth callback manually — exchanges the code for tokens without middleware.</summary>
     [HttpGet("google/callback")]
-    public async Task<IActionResult> GoogleCallback([FromQuery] string? desktop = null)
+    public async Task<IActionResult> GoogleCallback([FromQuery] string? code = null, [FromQuery] string? error = null, [FromQuery] string? desktop = null)
     {
-        try 
+        try
         {
-            var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
-            if (!result.Succeeded)
-            {
-                var failureMessage = result.Failure?.Message ?? "Unknown authentication failure";
-                return BadRequest($"Authentication failed: {failureMessage}");
-            }
+            if (!string.IsNullOrEmpty(error))
+                return Content($"Google OAuth error: {error}" + new string(' ', 512), "text/plain");
+
+            if (string.IsNullOrEmpty(code))
+                return Content("No authorization code received from Google." + new string(' ', 512), "text/plain");
+
+            var clientId = _config["Authentication:Google:ClientId"] ?? throw new InvalidOperationException("Google ClientId not configured");
+            var clientSecret = _config["Authentication:Google:ClientSecret"] ?? throw new InvalidOperationException("Google ClientSecret not configured");
             var forceElectron = string.Equals(desktop, "1", StringComparison.OrdinalIgnoreCase);
 
-            var principal = result.Principal!;
-            var googleId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-            var email = principal.FindFirstValue(ClaimTypes.Email);
-            var displayName = principal.FindFirstValue(ClaimTypes.Name) ?? email ?? "Unknown User";
-            var avatarUrl = principal.Claims
-                .FirstOrDefault(c => c.Type.Contains("picture") || c.Type == "urn:google:picture")?.Value;
+            // Reconstruct the exact same redirect_uri used in the authorization request
+            var scheme = Request.Scheme;
+            var host = Request.Host.Value;
+            var callbackUrl = $"{scheme}://{host}/api/auth/google/callback?desktop={desktop ?? "0"}";
+
+            // Step 1: Exchange the authorization code for tokens
+            var httpClientFactory = HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient("google");
+
+            var tokenParams = new Dictionary<string, string>
+            {
+                ["code"] = code,
+                ["client_id"] = clientId,
+                ["client_secret"] = clientSecret,
+                ["redirect_uri"] = callbackUrl,
+                ["grant_type"] = "authorization_code"
+            };
+
+            var tokenResponse = await httpClient.PostAsync(
+                "https://oauth2.googleapis.com/token",
+                new FormUrlEncodedContent(tokenParams));
+
+            var tokenBody = await tokenResponse.Content.ReadAsStringAsync();
+            if (!tokenResponse.IsSuccessStatusCode)
+                return Content($"Token exchange failed: {tokenBody}" + new string(' ', 512), "text/plain");
+
+            var tokenJson = JsonDocument.Parse(tokenBody);
+            var accessToken = tokenJson.RootElement.GetProperty("access_token").GetString()
+                ?? throw new Exception("No access_token in Google response");
+
+            // Step 2: Get user info from Google
+            var userInfoRequest = new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v2/userinfo");
+            userInfoRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            var userInfoResponse = await httpClient.SendAsync(userInfoRequest);
+            var userInfoBody = await userInfoResponse.Content.ReadAsStringAsync();
+
+            if (!userInfoResponse.IsSuccessStatusCode)
+                return Content($"UserInfo fetch failed: {userInfoBody}" + new string(' ', 512), "text/plain");
+
+            var userInfoJson = JsonDocument.Parse(userInfoBody);
+            var googleId = userInfoJson.RootElement.GetProperty("id").GetString();
+            var email = userInfoJson.RootElement.GetProperty("email").GetString();
+            var displayName = userInfoJson.RootElement.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : email;
+            var avatarUrl = userInfoJson.RootElement.TryGetProperty("picture", out var picEl) ? picEl.GetString() : null;
 
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(googleId))
-            {
-                return BadRequest("Google didn't provide required email or ID.");
-            }
+                return Content("Google didn't return email or ID." + new string(' ', 512), "text/plain");
 
+            // Step 3: Find or redirect to create account
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user is null)
             {
-                // NEW USER: Redirect to the frontend registration page with their Google info pre-filled
-                var registerUrl = $"{GetFrontendUrl()}/#/register?email={Uri.EscapeDataString(email)}&name={Uri.EscapeDataString(displayName)}&googleId={googleId}&avatarUrl={Uri.EscapeDataString(avatarUrl ?? "")}";
+                var registerUrl = $"{GetFrontendUrl()}/#/register" +
+                    $"?email={Uri.EscapeDataString(email)}" +
+                    $"&name={Uri.EscapeDataString(displayName ?? "")}" +
+                    $"&googleId={Uri.EscapeDataString(googleId)}" +
+                    $"&avatarUrl={Uri.EscapeDataString(avatarUrl ?? "")}";
                 return Redirect(registerUrl);
             }
 
-            // RETURNING USER
+            // Step 4: Log in returning user
             user.GoogleId ??= googleId;
             user.AvatarUrl = avatarUrl;
-            user.DisplayName = displayName; // Optional: update display name from Google
+            user.DisplayName = displayName ?? user.DisplayName;
             user.LastLoginAt = DateTime.UtcNow;
-
             await _db.SaveChangesAsync();
             await _auditService.LogAsync(user.Id, "UserLogin", "Google OAuth login");
 
-            var token = _tokenService.GenerateToken(user);
-            return RedirectToFrontend(token, forceElectron);
+            var jwtToken = _tokenService.GenerateToken(user);
+            return RedirectToFrontend(jwtToken, forceElectron);
         }
         catch (Exception ex)
         {
-            var msg = $"CRITICAL ERROR in GoogleCallback: {ex.Message} \n\n StackTrace: {ex.StackTrace}";
-            // Pad to ensure Chrome doesn't hide it
+            var msg = $"CRITICAL ERROR in GoogleCallback: {ex.Message}\n\nStackTrace: {ex.StackTrace}";
             msg += new string(' ', 1024);
             return Content(msg, "text/plain");
         }

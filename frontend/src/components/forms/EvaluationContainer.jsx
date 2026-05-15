@@ -28,6 +28,7 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
   const [evaluationStatus, setEvaluationStatus] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [saveStatus, setSaveStatus] = useState(''); // 'saving', 'saved', 'error', or ''
+  const [sessionResetKey, setSessionResetKey] = useState(0); // bump to force re-mount SessionFacilitator
   const autoSaveTimer = useRef(null);
   const [formData, setFormData] = useState({
     OpenDiscussion: {},
@@ -118,29 +119,51 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
     setSaving(true);
     try {
         if (program && program !== 'review') {
-            // Save as an ad-hoc form submission for correct history labeling and multiple sessions
-            const sessionData = program === 'discussion' ? formData.OpenDiscussion : 
-                               program === 'checkin' ? formData.CheckIn : formData.Coaching;
-            
+            const sectionKey = program === 'discussion' ? 'OpenDiscussion' : program === 'checkin' ? 'CheckIn' : 'Coaching';
+            const emptySection = program === 'checkin' ? { moodEmojis: [] } : program === 'coaching' ? { developmentTopics: [] } : {};
+            const sessionData = formData[sectionKey];
+
             const cid = (candidateId && !isNaN(candidateId)) ? parseInt(candidateId) : null;
-            
+
             await submitForm({
                 candidateId: cid,
                 formType: program === 'discussion' ? 'open_discussion' : program,
                 formData: JSON.stringify(sessionData)
             });
-            
-            // Also sync to the main evaluation record for cycle persistence
-            await saveSelfEvaluation(cycleId, { ...formData, isDraft: isDraft });
+
+            if (!isDraft) {
+                // Clear section data in backend so next session starts fresh
+                const clearedFormData = { ...formData, [sectionKey]: emptySection };
+                await saveSelfEvaluation(cycleId, clearedFormData);
+                setFormData(clearedFormData);
+                setSessionResetKey(k => k + 1); // force SessionFacilitator re-mount
+            } else {
+                await saveSelfEvaluation(cycleId, { ...formData, isDraft: true });
+            }
         } else {
             await saveSelfEvaluation(cycleId, { ...formData, isDraft: isDraft });
+            if (!isDraft) {
+                // Clear all data for performance review too if submitted finally
+                const emptyData = {
+                    OpenDiscussion: {},
+                    CheckIn: { moodEmojis: [] },
+                    Coaching: { developmentTopics: [] },
+                    Competencies: {
+                        technicalSkills: {}, communication: {}, leadership: {}, growthLearning: {}, culture: {}
+                    },
+                    Reflection: {}
+                };
+                await saveSelfEvaluation(cycleId, emptyData);
+                setFormData(emptyData);
+                setSessionResetKey(k => k + 1);
+            }
         }
 
         setIsDirty(false);
         if (isDraft) {
           toast.success('Draft saved');
         } else {
-          toast.success(program === 'review' ? 'Evaluation submitted' : 'Session saved');
+          toast.success(program === 'review' ? 'Evaluation submitted' : 'Session saved — data cleared for next session');
         }
         if (!isDraft) {
             onComplete();
@@ -169,10 +192,7 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
 
   const confirmReset = async () => {
     setShowResetConfirm(false);
-    setLoading(true);
-    // ...
     try {
-        // We'll just save an empty object to 'reset' it
         const emptyData = {
             OpenDiscussion: {},
             CheckIn: { moodEmojis: [] },
@@ -185,13 +205,12 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
         await saveSelfEvaluation(cycleId, emptyData);
         setFormData(emptyData);
         setEvaluationStatus('Draft');
+        setSessionResetKey(k => k + 1);
         setIsDirty(false);
         setStep(0);
         toast.success('Evaluation reset');
     } catch (e) {
         handleApiError(e, "Failed to reset");
-    } finally {
-        setLoading(false);
     }
   };
 
@@ -204,6 +223,9 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
   }
 
   if (program && program !== 'review') {
+    const sectionKey = program === 'discussion' ? 'OpenDiscussion' : program === 'checkin' ? 'CheckIn' : 'Coaching';
+    const emptySection = program === 'checkin' ? { moodEmojis: [] } : program === 'coaching' ? { developmentTopics: [] } : {};
+
     return (
       <div className="eval-container anim-fade-in" data-program={program}>
         <div className="eval-card">
@@ -222,14 +244,11 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
           </div>
           <div className="card-body">
             <SessionFacilitator 
+              key={sessionResetKey}
               type={program}
               data={program === 'discussion' ? formData.OpenDiscussion : 
                     program === 'checkin' ? formData.CheckIn : formData.Coaching} 
-              onChange={(d) => handleUpdate(
-                program === 'discussion' ? 'OpenDiscussion' : 
-                program === 'checkin' ? 'CheckIn' : 'Coaching', 
-                d
-              )} 
+              onChange={(d) => handleUpdate(sectionKey, d)} 
             />
           </div>
           <div className="card-ft">
@@ -243,6 +262,42 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
              </div>
           </div>
         </div>
+
+        {/* Reset Confirm Modal — must be inside the return for program mode */}
+        {showResetConfirm && (
+          <div className="modal-overlay" onClick={() => setShowResetConfirm(false)}>
+            <div className="modal-card" onClick={e => e.stopPropagation()}>
+              <div className="modal-hdr">
+                <h3>Clear Session?</h3>
+              </div>
+              <div className="modal-body">
+                This will permanently clear all notes for this session. This action cannot be undone.
+              </div>
+              <div className="modal-ft">
+                <button className="btn btn-ghost" onClick={() => setShowResetConfirm(false)}>Cancel</button>
+                <button
+                  className="btn btn-brand"
+                  style={{ background: '#ef4444', borderColor: '#ef4444' }}
+                  onClick={async () => {
+                    setShowResetConfirm(false);
+                    try {
+                      const cleared = { ...formData, [sectionKey]: emptySection };
+                      await saveSelfEvaluation(cycleId, cleared);
+                      setFormData(cleared);
+                      setSessionResetKey(k => k + 1); // force SessionFacilitator re-mount (resets timer/phases)
+                      setIsDirty(false);
+                      toast.success('Session cleared');
+                    } catch (e) {
+                      handleApiError(e, 'Failed to clear session');
+                    }
+                  }}
+                >
+                  Yes, Clear Everything
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

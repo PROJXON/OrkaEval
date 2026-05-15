@@ -6,7 +6,7 @@ const SESSION_CONFIGS = {
   discussion: {
     totalTime: 1800, // 30 mins
     title: 'Open Discussion',
-    icon: '🗣️',
+    icon: '💬',
     description: 'Alignment conversation for both parties.',
     phases: [
       { id: 1, name: 'Ice Breaker', dur: 120, icon: '🎲', color: 'var(--pu)' },
@@ -151,12 +151,24 @@ function SessionFacilitator({ data, onChange, type = 'discussion' }) {
                 <div className="ice-breaker-box">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
                     <span className="ib-ico">{iceBreaker?.i}</span>
-                    <button 
-                      className="btn-ghost" 
+                    <button
+                      className="btn-ghost"
                       onClick={() => setIceBreaker(ICE_BREAKERS[Math.floor(Math.random() * ICE_BREAKERS.length)])}
-                      style={{ padding: '4px 8px', fontSize: '0.7rem', opacity: 0.7 }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '5px',
+                        padding: '5px 12px', fontSize: '0.72rem', fontWeight: 600,
+                        borderRadius: '20px', border: '1px solid var(--clr-border)',
+                        background: 'var(--clr-surface-2)', color: 'var(--clr-text-muted)',
+                        cursor: 'pointer', transition: 'all 0.2s',
+                        letterSpacing: '0.02em'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.color = 'var(--clr-brand)'; e.currentTarget.style.borderColor = 'var(--clr-brand)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = 'var(--clr-text-muted)'; e.currentTarget.style.borderColor = 'var(--clr-border)'; }}
                     >
-                      🔄 Change Question
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+                      </svg>
+                      Shuffle
                     </button>
                   </div>
                   <p className="ib-q">{iceBreaker?.q}</p>
@@ -196,8 +208,8 @@ function SessionFacilitator({ data, onChange, type = 'discussion' }) {
 
       <div className="facilitator-grid mt-6">
         {phases.map((p, idx) => (
-          <div 
-            key={p.id} 
+          <div
+            key={p.id}
             className={`ph-grid-item ${activePhase === idx ? 'active' : ''} ${activePhase > idx ? 'done' : ''}`}
             onClick={() => activePhase !== -1 && setActivePhase(idx)}
             style={{ cursor: activePhase === -1 ? 'default' : 'pointer' }}

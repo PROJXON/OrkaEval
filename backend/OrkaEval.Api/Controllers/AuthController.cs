@@ -48,24 +48,26 @@ public class AuthController : ControllerBase
         var clientId = _config["Authentication:Google:ClientId"] ?? throw new InvalidOperationException("Google ClientId not configured");
         var desktop = string.Equals(returnUrl, "electron", StringComparison.OrdinalIgnoreCase) ? "1" : "0";
 
-        // Build the callback URL using the forwarded scheme/host
+        // Build the callback URL with NO query params — Google requires exact URI match
         var scheme = Request.Scheme;
         var host = Request.Host.Value;
-        var callbackUrl = $"{scheme}://{host}/api/auth/google/callback?desktop={desktop}";
+        var callbackUrl = $"{scheme}://{host}/api/auth/google/callback";
 
+        // Pass desktop flag via OAuth state parameter instead of redirect_uri
         var googleAuthUrl = "https://accounts.google.com/o/oauth2/v2/auth" +
             $"?client_id={Uri.EscapeDataString(clientId)}" +
             $"&redirect_uri={Uri.EscapeDataString(callbackUrl)}" +
             "&response_type=code" +
             "&scope=openid%20email%20profile" +
-            "&access_type=offline";
+            "&access_type=offline" +
+            $"&state={Uri.EscapeDataString(desktop)}";
 
         return Redirect(googleAuthUrl);
     }
 
     /// <summary>Handles the Google OAuth callback manually — exchanges the code for tokens without middleware.</summary>
     [HttpGet("google/callback")]
-    public async Task<IActionResult> GoogleCallback([FromQuery] string? code = null, [FromQuery] string? error = null, [FromQuery] string? desktop = null)
+    public async Task<IActionResult> GoogleCallback([FromQuery] string? code = null, [FromQuery] string? error = null, [FromQuery] string? state = null)
     {
         try
         {
@@ -77,12 +79,12 @@ public class AuthController : ControllerBase
 
             var clientId = _config["Authentication:Google:ClientId"] ?? throw new InvalidOperationException("Google ClientId not configured");
             var clientSecret = _config["Authentication:Google:ClientSecret"] ?? throw new InvalidOperationException("Google ClientSecret not configured");
-            var forceElectron = string.Equals(desktop, "1", StringComparison.OrdinalIgnoreCase);
+            var forceElectron = string.Equals(state, "1", StringComparison.OrdinalIgnoreCase);
 
-            // Reconstruct the exact same redirect_uri used in the authorization request
+            // Reconstruct the exact same redirect_uri used in the authorization request (no query params)
             var scheme = Request.Scheme;
             var host = Request.Host.Value;
-            var callbackUrl = $"{scheme}://{host}/api/auth/google/callback?desktop={desktop ?? "0"}";
+            var callbackUrl = $"{scheme}://{host}/api/auth/google/callback";
 
             // Step 1: Exchange the authorization code for tokens
             var httpClientFactory = HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();

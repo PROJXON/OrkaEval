@@ -32,18 +32,20 @@ public class FormController : ControllerBase
         int candidateId;
         int? coachId = null;
 
-        if (user.Role == UserRole.Coach)
+        bool actingAsCoach = (user.Role == UserRole.Coach || user.Role == UserRole.Both) && req.CandidateId.HasValue;
+
+        if (actingAsCoach)
         {
-            if (req.CandidateId == null) return BadRequest(new { message = "Candidate selection is required for coaches." });
-            candidateId = req.CandidateId.Value;
+            candidateId = req.CandidateId!.Value;
             var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
             coachId = coach?.Id;
         }
         else
         {
-            // Candidate submitting their own form (Performance Review)
+            // Candidate submitting their own form (Performance Review, Check-In, etc)
             var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
             if (candidate == null) return BadRequest(new { message = "Candidate record not found." });
+            if (candidate.CoachId == null) return BadRequest(new { message = "You must select a coach in your profile before submitting forms." });
             candidateId = candidate.Id;
             coachId = candidate.CoachId;
         }
@@ -103,7 +105,25 @@ public class FormController : ControllerBase
         IQueryable<FormSubmission> query = _db.FormSubmissions
             .Include(s => s.Candidate);
 
-        if (user.Role == UserRole.Coach)
+        if (user.Role == UserRole.Admin)
+        {
+            // Admin sees all history, optionally filtered by candidateId
+            if (candidateId != null) query = query.Where(s => s.CandidateId == candidateId);
+        }
+        else if (user.Role == UserRole.Both)
+        {
+            var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
+            var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+            
+            // Both user sees their own submissions OR their team's submissions
+            query = query.Where(s => 
+                (coach != null && s.CoachId == coach.Id) || 
+                (candidate != null && s.CandidateId == candidate.Id)
+            );
+            
+            if (candidateId != null) query = query.Where(s => s.CandidateId == candidateId);
+        }
+        else if (user.Role == UserRole.Coach)
         {
             var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
             if (coach == null) return Unauthorized();
@@ -133,7 +153,31 @@ public class FormController : ControllerBase
 
         // Get formal evaluations
         var evalQuery = _db.Evaluations.Include(e => e.User).Include(e => e.Cycle).AsQueryable();
-        if (user.Role == UserRole.Coach)
+        
+        if (user.Role == UserRole.Admin)
+        {
+            if (candidateId != null)
+            {
+                var targetCandidate = await _db.Candidates.FindAsync(candidateId);
+                if (targetCandidate != null) evalQuery = evalQuery.Where(e => e.UserId == targetCandidate.UserId);
+            }
+        }
+        else if (user.Role == UserRole.Both)
+        {
+            var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
+            
+            evalQuery = evalQuery.Where(e => 
+                e.UserId == userId || // Own evaluation
+                (coach != null && _db.Candidates.Any(c => c.UserId == e.UserId && c.CoachId == coach.Id)) // Team evaluation
+            );
+            
+            if (candidateId != null) 
+            {
+                var targetCandidate = await _db.Candidates.FindAsync(candidateId);
+                if (targetCandidate != null) evalQuery = evalQuery.Where(e => e.UserId == targetCandidate.UserId);
+            }
+        }
+        else if (user.Role == UserRole.Coach)
         {
             var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
             if (coach != null)
@@ -213,10 +257,28 @@ public class FormController : ControllerBase
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null) return Unauthorized();
+
+        if (user.Role == UserRole.Admin)
+        {
+            // Admin sees all candidates
+            var allCandidates = await _db.Candidates
+                .Select(c => new {
+                    c.Id,
+                    c.FullName,
+                    c.Email,
+                    c.StartDate,
+                    c.CycleStart,
+                    c.CycleEnd
+                }).ToListAsync();
+            return Ok(allCandidates);
+        }
+
         var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
         if (coach == null) return Ok(new List<object>()); // Return empty if not a coach
 
-        // For coaches to select their team members
+        // For coaches/both to select their team members
         var candidates = await _db.Candidates
             .Where(c => c.CoachId == coach.Id)
             .Select(c => new {
@@ -243,8 +305,22 @@ public class FormController : ControllerBase
 
         if (submission == null) return NotFound();
 
-        // Check permission: Coach or Candidate must be involved
-        if (user.Role == UserRole.Coach)
+        // Check permission: Admin, Coach, or Candidate must be involved
+        if (user.Role == UserRole.Admin)
+        {
+            // Allowed
+        }
+        else if (user.Role == UserRole.Both)
+        {
+            var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
+            var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+            
+            bool isCoach = coach != null && submission.CoachId == coach.Id;
+            bool isCandidate = candidate != null && submission.CandidateId == candidate.Id;
+            
+            if (!isCoach && !isCandidate) return Forbid();
+        }
+        else if (user.Role == UserRole.Coach)
         {
             var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
             if (coach == null || submission.CoachId != coach.Id) return Forbid();

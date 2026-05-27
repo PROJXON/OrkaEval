@@ -52,6 +52,12 @@ public class EvaluationService : IEvaluationService
 
     public async Task<EvaluationDto> SaveSelfEvaluationAsync(int userId, int cycleId, EvaluationCreateDto dto)
     {
+        var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (candidate?.CoachId == null && !dto.IsDraft)
+        {
+            throw new InvalidOperationException("You must select a coach in your profile before submitting your evaluation.");
+        }
+
         var eval = await _db.Evaluations.FirstOrDefaultAsync(e => e.UserId == userId && e.CycleId == cycleId);
         if (eval == null)
         {
@@ -98,19 +104,26 @@ public class EvaluationService : IEvaluationService
         pageSize = pageSize < 1 ? 20 : pageSize;
         pageSize = pageSize > 100 ? 100 : pageSize;
 
+        var user = await _db.Users.FindAsync(currentUserId);
+        var isAdmin = user?.Role == UserRole.Admin;
+        
         var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == currentUserId);
         var query = _db.Evaluations
             .Include(e => e.User)
             .Include(e => e.Cycle)
             .Where(e => (cycleId <= 0 || e.CycleId == cycleId) && (e.Status != EvaluationStatus.Draft || e.UserId == currentUserId));
 
-        if (coach != null)
+        if (isAdmin)
+        {
+            // Admin sees all evaluations, no additional filters needed
+        }
+        else if (coach != null)
         {
             query = query.Where(e => _db.Candidates.Any(can => can.UserId == e.UserId && can.CoachId == coach.Id));
         }
         else
         {
-            // If not a coach, only see own
+            // If not a coach or admin, only see own
             query = query.Where(e => e.UserId == currentUserId);
         }
 

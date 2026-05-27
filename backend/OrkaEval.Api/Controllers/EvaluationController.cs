@@ -38,8 +38,15 @@ public class EvaluationController : ControllerBase
     public async Task<ActionResult<EvaluationDto>> SaveSelfEvaluation(int cycleId, [FromBody] EvaluationCreateDto request)
     {
         var userId = GetCurrentUserId();
-        var saved = await _evaluationService.SaveSelfEvaluationAsync(userId, cycleId, request);
-        return Ok(saved);
+        try
+        {
+            var saved = await _evaluationService.SaveSelfEvaluationAsync(userId, cycleId, request);
+            return Ok(saved);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     // ── Evaluator: Get All Evaluations to Review ──────────────────────────────

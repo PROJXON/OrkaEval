@@ -14,12 +14,32 @@ public class AnalyticsService : IAnalyticsService
         _db = db;
     }
 
-    public async Task<AnalyticsHubDto> GetHubDataAsync(int cycleNumber)
+    public async Task<AnalyticsHubDto> GetHubDataAsync(int cycleNumber, int currentUserId)
     {
         var hub = new AnalyticsHubDto();
 
+        var user = await _db.Users.FindAsync(currentUserId);
+        var isAdmin = user?.Role == UserRole.Admin;
+        var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == currentUserId);
+
+        IQueryable<Evaluation> evalsQuery = _db.Evaluations;
+        IQueryable<Candidate> candidatesQuery = _db.Candidates;
+
+        if (!isAdmin && coach != null)
+        {
+            evalsQuery = evalsQuery.Where(e => _db.Candidates.Any(can => can.UserId == e.UserId && can.CoachId == coach.Id));
+            candidatesQuery = candidatesQuery.Where(c => c.CoachId == coach.Id);
+        }
+        else if (!isAdmin && coach == null)
+        {
+            // If they are just a candidate or somehow else accessed this, they shouldn't see anything or just their own.
+            // Since it's an analytics hub, restrict to empty if not admin/coach.
+            evalsQuery = evalsQuery.Where(e => e.UserId == currentUserId);
+            candidatesQuery = candidatesQuery.Where(c => c.UserId == currentUserId);
+        }
+
         // 1. Competency Heatmap (Average of Evaluator Ratings in the specified cycle number)
-        var evalsInCycle = await _db.Evaluations
+        var evalsInCycle = await evalsQuery
             .Include(e => e.Cycle)
             .Where(e => e.Cycle != null && e.Cycle.Number == cycleNumber && e.Status >= EvaluationStatus.EvaluatorCompleted)
             .ToListAsync();
@@ -34,8 +54,8 @@ public class AnalyticsService : IAnalyticsService
         };
 
         // 2. Submission Stats
-        var totalCandidates = await _db.Candidates.CountAsync();
-        var evals = await _db.Evaluations
+        var totalCandidates = await candidatesQuery.CountAsync();
+        var evals = await evalsQuery
             .Include(e => e.Cycle)
             .Where(e => e.Cycle != null && e.Cycle.Number == cycleNumber)
             .ToListAsync();
@@ -49,7 +69,7 @@ public class AnalyticsService : IAnalyticsService
         };
 
         // 3. Growth Trends (Average score per cycle)
-        var allEvals = await _db.Evaluations
+        var allEvals = await evalsQuery
             .Where(e => e.Status >= EvaluationStatus.EvaluatorCompleted)
             .Include(e => e.Cycle)
             .ToListAsync();

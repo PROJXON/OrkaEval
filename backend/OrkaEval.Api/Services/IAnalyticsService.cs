@@ -4,5 +4,5 @@ namespace OrkaEval.Api.Services;
 
 public interface IAnalyticsService
 {
-    Task<AnalyticsHubDto> GetHubDataAsync(int cycleId);
+    Task<AnalyticsHubDto> GetHubDataAsync(int cycleId, int currentUserId);
 }

@@ -14,7 +14,7 @@ public interface IEvaluationService
     Task<EvaluationDto> SaveEvaluatorReviewAsync(int evaluationId, int evaluatorId, EvaluatorReviewDto dto);
     Task<EvaluationDto> CompleteEvaluationAsync(int evaluationId, int actorUserId);
     Task<EvaluationDto> SaveSessionNotesAsync(int evaluationId, int actorUserId, SessionSection session);
-    Task<EvaluationDto?> GetEvaluationByIdAsync(int id);
+    Task<EvaluationDto?> GetEvaluationByIdAsync(int id, int currentUserId);
 }
 
 public class PagedResult<T>
@@ -39,6 +39,21 @@ public class EvaluationService : IEvaluationService
         _mapper = mapper;
         _emailService = emailService;
         _auditService = auditService;
+    }
+
+    private async Task<bool> HasAccessToEvaluationAsync(Evaluation eval, int userId)
+    {
+        if (eval.UserId == userId) return true; // Own evaluation
+        var user = await _db.Users.FindAsync(userId);
+        if (user?.Role == UserRole.Admin) return true; // Admin access
+        
+        var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (coach != null)
+        {
+            var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == eval.UserId);
+            if (candidate?.CoachId == coach.Id) return true; // Coach access
+        }
+        return false;
     }
 
     public async Task<EvaluationDto?> GetMyEvaluationAsync(int userId, int cycleId)
@@ -158,6 +173,8 @@ public class EvaluationService : IEvaluationService
     public async Task<EvaluationDto> SaveEvaluatorReviewAsync(int evaluationId, int evaluatorId, EvaluatorReviewDto dto)
     {
         var eval = await _db.Evaluations.FindAsync(evaluationId) ?? throw new KeyNotFoundException("Evaluation not found.");
+        if (!await HasAccessToEvaluationAsync(eval, evaluatorId)) throw new UnauthorizedAccessException("You do not have permission to modify this evaluation.");
+        
         eval.EvaluatorId = evaluatorId;
         eval.Status = EvaluationStatus.EvaluatorCompleted;
         eval.UpdatedAt = DateTime.UtcNow;
@@ -185,6 +202,8 @@ public class EvaluationService : IEvaluationService
     public async Task<EvaluationDto> CompleteEvaluationAsync(int evaluationId, int actorUserId)
     {
         var eval = await _db.Evaluations.FindAsync(evaluationId) ?? throw new KeyNotFoundException("Evaluation not found.");
+        if (!await HasAccessToEvaluationAsync(eval, actorUserId)) throw new UnauthorizedAccessException("You do not have permission to modify this evaluation.");
+        
         eval.Status = EvaluationStatus.SessionCompleted;
         eval.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -195,19 +214,25 @@ public class EvaluationService : IEvaluationService
     public async Task<EvaluationDto> SaveSessionNotesAsync(int evaluationId, int actorUserId, SessionSection session)
     {
         var eval = await _db.Evaluations.FindAsync(evaluationId) ?? throw new KeyNotFoundException("Evaluation not found.");
+        if (!await HasAccessToEvaluationAsync(eval, actorUserId)) throw new UnauthorizedAccessException("You do not have permission to modify this evaluation.");
+        
         eval.Session = session;
         eval.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return _mapper.Map<EvaluationDto>(eval);
     }
 
-    public async Task<EvaluationDto?> GetEvaluationByIdAsync(int id)
+    public async Task<EvaluationDto?> GetEvaluationByIdAsync(int id, int currentUserId)
     {
         var eval = await _db.Evaluations
             .Include(e => e.User)
             .Include(e => e.Evaluator)
             .Include(e => e.Cycle)
             .FirstOrDefaultAsync(e => e.Id == id);
-        return eval is null ? null : _mapper.Map<EvaluationDto>(eval);
+            
+        if (eval == null) return null;
+        if (!await HasAccessToEvaluationAsync(eval, currentUserId)) throw new UnauthorizedAccessException("You do not have permission to view this evaluation.");
+        
+        return _mapper.Map<EvaluationDto>(eval);
     }
 }

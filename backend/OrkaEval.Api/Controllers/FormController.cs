@@ -39,6 +39,15 @@ public class FormController : ControllerBase
             candidateId = req.CandidateId!.Value;
             var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
             coachId = coach?.Id;
+
+            if (user.Role != UserRole.Admin)
+            {
+                var targetCandidate = await _db.Candidates.FindAsync(candidateId);
+                if (targetCandidate == null || targetCandidate.CoachId != coach?.Id)
+                {
+                    return Forbid();
+                }
+            }
         }
         else
         {

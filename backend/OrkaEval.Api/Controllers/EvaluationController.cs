@@ -85,6 +85,10 @@ public class EvaluationController : ControllerBase
         {
             return NotFound();
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 
     // ── Complete / Finalize Evaluation (Joint Session sign-off) ───────────────
@@ -101,6 +105,10 @@ public class EvaluationController : ControllerBase
         catch (KeyNotFoundException)
         {
             return NotFound();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
     }
 
@@ -119,14 +127,26 @@ public class EvaluationController : ControllerBase
         {
             return NotFound();
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<EvaluationDto>> GetById(int id)
     {
-        var eval = await _evaluationService.GetEvaluationByIdAsync(id);
-        if (eval is null) return NotFound();
-        return Ok(eval);
+        var userId = GetCurrentUserId();
+        try
+        {
+            var eval = await _evaluationService.GetEvaluationByIdAsync(id, userId);
+            if (eval is null) return NotFound();
+            return Ok(eval);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 
 }

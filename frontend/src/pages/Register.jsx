@@ -14,9 +14,11 @@ function Register() {
     startDate: new Date().toISOString().split('T')[0],
     profileType: 'both',
     googleId: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    coachId: ''
   });
   const [isGoogleSignUp, setIsGoogleSignUp] = useState(false);
+  const [coaches, setCoaches] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,6 +41,19 @@ function Register() {
     }
   }, [location.search]);
 
+  // Fetch available coaches for the dropdown
+  useEffect(() => {
+    const fetchCoaches = async () => {
+      try {
+        const res = await api.get('/auth/coaches/public');
+        setCoaches(res.data);
+      } catch (err) {
+        console.error('Failed to load coaches', err);
+      }
+    };
+    fetchCoaches();
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -47,7 +62,11 @@ function Register() {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/auth/register', formData);
+      const payload = {
+        ...formData,
+        coachId: formData.coachId ? parseInt(formData.coachId) : null
+      };
+      await api.post('/auth/register', payload);
       toast.success('Registration successful! Please login.');
       navigate('/');
     } catch (err) {
@@ -153,6 +172,21 @@ function Register() {
                   onChange={handleChange}
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '0.9rem', outline: 'none' }}
                 />
+              </div>
+
+              <div className="form-group">
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: 'var(--clr-text-muted)' }}>ASSIGN COACH <span style={{ fontWeight: 400, fontSize: '0.75rem' }}>(optional)</span></label>
+                <select
+                  name="coachId"
+                  value={formData.coachId}
+                  onChange={handleChange}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '0.9rem', outline: 'none' }}
+                >
+                  <option value="">Select a coach (can be changed later)</option>
+                  {coaches.map(c => (
+                    <option key={c.id} value={c.id}>{c.fullName}</option>
+                  ))}
+                </select>
               </div>
 
               <button

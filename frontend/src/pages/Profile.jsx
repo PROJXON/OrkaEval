@@ -99,15 +99,27 @@ export default function Profile() {
     }
   };
 
+  // Bug #6 fix: coachId may come from either top-level user.coachId (set after inline update)
+  // or user.candidateData?.CoachId (set by /auth/me on page load). Normalize here.
+  const resolvedCoachId = user?.coachId ?? user?.candidateData?.CoachId ?? '';
+
   const handleCoachChange = async (coachId) => {
     setLoading(true);
     try {
       const cid = coachId === "" ? null : parseInt(coachId);
       const res = await api.put('/auth/profile/coach', { coachId: cid });
-      setUser(prev => ({ ...prev, coachId: res.data.coachId, coachName: res.data.coachName }));
+      // Keep both top-level coachId and nested candidateData in sync
+      setUser(prev => ({
+        ...prev,
+        coachId: res.data.coachId,
+        coachName: res.data.coachName,
+        candidateData: prev.candidateData
+          ? { ...prev.candidateData, CoachId: res.data.coachId }
+          : prev.candidateData
+      }));
       toast.success('Coach updated successfully');
     } catch (err) {
-      toast.error('Failed to update coach');
+      toast.error(err.response?.data?.message || 'Failed to update coach');
     } finally {
       setLoading(false);
     }
@@ -197,7 +209,7 @@ export default function Profile() {
             <div className="form-group">
               <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Select or Change Coach</label>
               <select
-                value={user?.coachId || ''}
+                value={resolvedCoachId}
                 onChange={(e) => handleCoachChange(e.target.value)}
                 disabled={loading}
                 style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem' }}

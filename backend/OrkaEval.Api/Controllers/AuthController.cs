@@ -32,11 +32,22 @@ public class AuthController : ControllerBase
         _imageService = imageService;
     }
 
+    [Authorize]
     [HttpGet("coaches")]
     public async Task<IActionResult> GetAvailableCoaches()
     {
         var coaches = await _db.Coaches
             .Select(c => new { c.Id, c.FullName, c.UserId })
+            .ToListAsync();
+        return Ok(coaches);
+    }
+
+    /// <summary>Public endpoint for the registration form to list available coaches.</summary>
+    [HttpGet("coaches/public")]
+    public async Task<IActionResult> GetAvailableCoachesPublic()
+    {
+        var coaches = await _db.Coaches
+            .Select(c => new { c.Id, c.FullName })
             .ToListAsync();
         return Ok(coaches);
     }
@@ -174,7 +185,15 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Password is required." });
         }
 
-        var role = UserRole.Both; // Default to both as per requirements
+        // Map ProfileType/Role from request to UserRole enum
+        var profileType = (req.ProfileType ?? req.Role ?? "both").Trim().ToLowerInvariant();
+        var role = profileType switch
+        {
+            "candidate" => UserRole.Candidate,
+            "coach" => UserRole.Coach,
+            "both" => UserRole.Both,
+            _ => UserRole.Both
+        };
 
         var user = new User
         {
@@ -236,19 +255,31 @@ public class AuthController : ControllerBase
 
         var token = _tokenService.GenerateToken(user);
 
-        // Fetch additional profile info for the dashboard
+        // Fetch additional profile info for the dashboard (same shape as /auth/me)
         string? participantName = null;
         string? coachName = null;
+        int? returnCoachId = null;
+        object? candidateData = null;
+        object? coachData = null;
 
         if (user.Role == UserRole.Candidate || user.Role == UserRole.Both)
         {
             var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == user.Id);
             participantName = candidate?.FullName;
+            returnCoachId = candidate?.CoachId;
+            candidateData = candidate != null ? new { candidate.Id, candidate.CoachId, candidate.CycleStart, candidate.CycleEnd } : null;
+            if (candidate?.CoachId != null)
+            {
+                var assignedCoach = await _db.Coaches.FindAsync(candidate.CoachId);
+                coachName = assignedCoach?.FullName;
+            }
         }
-        else if (user.Role == UserRole.Coach)
+
+        if (user.Role == UserRole.Coach || user.Role == UserRole.Both)
         {
-            var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == user.Id);
-            coachName = coach?.FullName;
+            var coachRecord = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == user.Id);
+            coachName ??= coachRecord?.FullName;
+            coachData = coachRecord != null ? new { coachRecord.Id } : null;
         }
 
         return Ok(new { 
@@ -261,7 +292,10 @@ public class AuthController : ControllerBase
                 role = user.Role.ToString(),
                 participantName,
                 coachName,
-                startDate = user.StartDate
+                coachId = returnCoachId,
+                startDate = user.StartDate,
+                candidateData,
+                coachData
             }
         });
     }
@@ -637,6 +671,16 @@ public class AuthController : ControllerBase
         if (!int.TryParse(userIdStr, out var userId))
             return Unauthorized();
 
+        // Bug #1 fix: Prevent self-coaching
+        if (req.CoachId != null)
+        {
+            var targetCoach = await _db.Coaches.FindAsync(req.CoachId);
+            if (targetCoach == null)
+                return BadRequest(new { message = "Selected coach does not exist." });
+            if (targetCoach.UserId == userId)
+                return BadRequest(new { message = "You cannot assign yourself as your own coach." });
+        }
+
         var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
         if (candidate == null)
         {
@@ -677,25 +721,11 @@ public class AuthController : ControllerBase
             coachName = coach?.FullName;
         }
 
-        var coachRecord = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == userId);
-        if (coachRecord == null)
-        {
-            var user = await _db.Users.FindAsync(userId);
-            if (user != null)
-            {
-                coachRecord = new Coach
-                {
-                    UserId = user.Id,
-                    FullName = user.DisplayName,
-                    Email = user.Email,
-                    StartDate = user.StartDate
-                };
-                _db.Coaches.Add(coachRecord);
-                await _db.SaveChangesAsync();
-            }
-        }
+        // Bug #2 fix: Removed unconditional Coach record creation.
+        // Coach records should only be created during registration when the user's role warrants it.
 
-        await _auditService.LogAsync(userId, "ProfileUpdate", $"User updated their coach to {coachName ?? "None"}");
+        var logCoachName = coachName ?? "None";
+        await _auditService.LogAsync(userId, "ProfileUpdate", $"User updated their coach to {logCoachName}");
 
         return Ok(new { coachId = candidate.CoachId, coachName });
     }

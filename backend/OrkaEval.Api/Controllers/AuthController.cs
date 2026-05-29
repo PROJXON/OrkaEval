@@ -317,7 +317,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
             Console.WriteLine($"[AUTH] Login failed: User '{user.Email}' has no password hash. They likely signed up with Google.");
-            return Unauthorized(new { message = "This account was created via Google. Please use 'Continue with Google'." });
+            return Unauthorized(new { message = "This account was created via Google. Please use 'Continue with Google' or click 'Forgot password?' to set a password." });
         }
 
         bool isValid = BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash);

@@ -90,6 +90,41 @@ public class EvaluationService : IEvaluationService
         await _db.SaveChangesAsync();
         await _auditService.LogAsync(userId, "EvaluationSubmitted", $"EvaluationId={eval.Id};CycleId={cycleId}");
 
+        // Notify the coach when a candidate finalizes their self-evaluation
+        if (!dto.IsDraft)
+        {
+            try
+            {
+                var candidateWithUser = await _db.Candidates
+                    .Include(c => c.User)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
+                if (candidateWithUser?.CoachId != null)
+                {
+                    var coach = await _db.Coaches
+                        .Include(c => c.User)
+                        .FirstOrDefaultAsync(c => c.Id == candidateWithUser.CoachId);
+                    if (coach?.User != null && coach.User.NotificationsEnabled)
+                    {
+                        var submitterName = candidateWithUser.User?.DisplayName ?? "A team member";
+                        _db.Notifications.Add(new Notification
+                        {
+                            UserId = coach.UserId,
+                            Title = "Self-Evaluation Submitted",
+                            Message = $"{submitterName} has submitted their self-evaluation for Cycle {cycleId}.",
+                            Type = "Evaluation",
+                            Link = $"/dashboard",
+                            CreatedAt = DateTime.UtcNow
+                        });
+                        await _db.SaveChangesAsync();
+                    }
+                }
+            }
+            catch
+            {
+                // Do not fail the evaluation save if notification creation fails.
+            }
+        }
+
         try
         {
             var user = await _db.Users.FindAsync(userId);

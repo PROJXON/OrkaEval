@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import { getMyProfile } from './api';
@@ -20,24 +20,13 @@ function RequireAuth({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 1. Check if token is in the URL (support both normal and HashRouter URLs)
-    const getParam = (name) => {
-      const search = new URLSearchParams(window.location.search).get(name);
-      if (search) return search;
-      // If not in search, check the hash (for HashRouter)
-      const hashParts = window.location.hash.split('?');
-      if (hashParts.length > 1) {
-        return new URLSearchParams(hashParts[1]).get(name);
-      }
-      return null;
-    };
-
-    const tokenFromUrl = getParam('token');
+    // 1. Check if token is in the URL (standard BrowserRouter query params)
+    const params = new URLSearchParams(window.location.search);
+    const tokenFromUrl = params.get('token');
     if (tokenFromUrl) {
       saveToken(tokenFromUrl);
-      // Clean up URL
-      const cleanPath = window.location.pathname + window.location.hash.split('?')[0];
-      window.history.replaceState({}, document.title, cleanPath);
+      // Clean up URL — remove token from address bar
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     const verify = async () => {
@@ -87,7 +76,7 @@ function App() {
   );
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Suspense fallback={loadingFallback}>
         <Routes>
           <Route path="/" element={<Login />} />
@@ -113,7 +102,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 

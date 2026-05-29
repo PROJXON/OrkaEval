@@ -79,8 +79,8 @@ public class FormController : ControllerBase
         _db.FormSubmissions.Add(submission);
         await _db.SaveChangesAsync();
 
-        // Create notification for the candidate if submitted by coach
-        if (user.Role == UserRole.Coach || user.Role == UserRole.Both)
+        // Create notification for the candidate if submitted by coach on their behalf
+        if (actingAsCoach)
         {
             var notification = new Notification
             {

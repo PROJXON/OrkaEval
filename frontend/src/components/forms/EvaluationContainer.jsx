@@ -179,8 +179,11 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
     const d = formData;
     if (sId >= 0 && sId <= 4) {
         const key = steps[sId].compKey;
-        const val = d.Competencies[key]?.selfRating;
-        return typeof val === 'number' && val > 0;
+        const comp = d.Competencies[key] || {};
+        const val = comp.selfRating;
+        const evidence = comp.evidence?.trim();
+        const actionPlan = comp.actionPlan?.trim();
+        return typeof val === 'number' && val > 0 && !!evidence && !!actionPlan;
     }
     if (sId === 5) return !!(d.Reflection.greatestAchievement?.trim() || d.Reflection.goal1?.trim());
     return false;
@@ -314,7 +317,23 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
             <div 
                 key={s.id} 
                 className={`s9-item ${step === s.id ? 'active' : ''} ${isStepComplete(s.id) ? 'done' : ''}`}
-                onClick={() => setStep(s.id)}
+                onClick={() => {
+                   if (s.id < step) {
+                      setStep(s.id);
+                      return;
+                   }
+                   if (!isStepComplete(step)) {
+                      toast.error('Please complete the required fields before continuing.');
+                      return;
+                   }
+                   for (let i = step; i < s.id; i++) {
+                       if (!isStepComplete(i)) {
+                           toast.error('Please complete previous required fields before continuing.');
+                           return;
+                       }
+                   }
+                   setStep(s.id);
+                }}
             >
                 <div className="s9-dot">{isStepComplete(s.id) ? '✓' : s.id + 1}</div>
                 <span className="s9-lbl">{s.label}</span>

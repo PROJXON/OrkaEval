@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { clearToken } from '../utils/tokenStore';
@@ -16,6 +16,20 @@ function Dashboard() {
   const { user } = useUser();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('view') === 'history') {
+      setShowHistory(true);
+      setShowEvaluation(false);
+      setShowAnalytics(false);
+      const idStr = params.get('id');
+      if (idStr) {
+        setSelectedSubmissionId(parseInt(idStr, 10));
+      }
+    }
+  }, [location.search]);
 
   const getServerUrl = (url) => {
     if (!url) return null;
@@ -282,9 +296,20 @@ function Dashboard() {
   return (
     <div className="dashboard-page">
       <nav className="dashboard-nav">
-        <Link to="/dashboard" className="nav-brand" style={{ textDecoration: 'none' }}>
+        <div 
+          className="nav-brand" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => {
+            setShowAnalytics(false);
+            setShowEvaluation(false);
+            setShowHistory(false);
+            setActiveForm('performance_review');
+            setSelectedCandidateId('');
+            navigate('/dashboard');
+          }}
+        >
           <Logo size={48} />
-        </Link>
+        </div>
         
         <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <button 

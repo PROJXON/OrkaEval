@@ -768,7 +768,7 @@ public class AuthController : ControllerBase
             return Redirect($"orkaeval://auth-callback?token={token}");
         }
         var frontendUrl = GetFrontendUrl();
-        return Redirect($"{frontendUrl}/dashboard?token={token}");
+        return Redirect($"{frontendUrl}/#/dashboard?token={token}");
     }
 
     private string GetFrontendUrl() =>

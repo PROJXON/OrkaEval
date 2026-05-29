@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../api';
 import { useUser } from '../context/UserContext';
 
@@ -9,21 +10,29 @@ export default function NotificationBell() {
     const dropdownRef = useRef(null);
     const { user } = useUser();
 
-    useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const data = await getNotifications();
-                setNotifications(data);
-                setUnreadCount(data.filter(n => !n.isRead).length);
-            } catch (err) {
-                console.error('Failed to fetch notifications', err);
-            }
-        };
+    const navigate = useNavigate();
 
+    const fetchNotifications = async () => {
+        try {
+            const data = await getNotifications();
+            setNotifications(data);
+            setUnreadCount(data.filter(n => !n.isRead).length);
+        } catch (err) {
+            console.error('Failed to fetch notifications', err);
+        }
+    };
+
+    useEffect(() => {
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000); // Poll every minute
+        const interval = setInterval(fetchNotifications, 10000); // Poll every 10s
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        if (showDropdown) {
+            fetchNotifications();
+        }
+    }, [showDropdown]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -113,7 +122,13 @@ export default function NotificationBell() {
                             notifications.map(n => (
                                 <div 
                                     key={n.id} 
-                                    onClick={() => handleMarkAsRead(n.id)}
+                                    onClick={async () => {
+                                        await handleMarkAsRead(n.id);
+                                        if (n.link) {
+                                            navigate(n.link.replace('/dashboard', ''));
+                                            setShowDropdown(false);
+                                        }
+                                    }}
                                     style={{ 
                                         padding: '16px', 
                                         borderBottom: '1px solid var(--clr-border)', 

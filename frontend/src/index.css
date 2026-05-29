@@ -748,6 +748,14 @@ textarea { min-height: 120px; resize: vertical; }
 
 .btn-brand:active { transform: translateY(1px); }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
 /* Input Styling */
 input[type="email"],
 input[type="password"],

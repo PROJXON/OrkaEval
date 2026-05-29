@@ -181,8 +181,8 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
         const key = steps[sId].compKey;
         const comp = d.Competencies[key] || {};
         const val = comp.selfRating;
-        const evidence = comp.evidence?.trim();
-        const actionPlan = comp.actionPlan?.trim();
+        const evidence = comp.selfEvidence?.trim();
+        const actionPlan = comp.selfAction?.trim();
         return typeof val === 'number' && val > 0 && !!evidence && !!actionPlan;
     }
     if (sId === 5) return !!(d.Reflection.greatestAchievement?.trim() || d.Reflection.goal1?.trim());

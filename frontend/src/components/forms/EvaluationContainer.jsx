@@ -77,7 +77,7 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
     clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
       try {
-        await saveSelfEvaluation(cycleId, formData);
+        await saveSelfEvaluation(cycleId, { ...formData, isDraft: true });
         setIsDirty(false);
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus(''), 2000); // clear indicator after 2s

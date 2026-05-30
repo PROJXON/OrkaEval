@@ -14,7 +14,7 @@ const COMPETENCIES = [
 
 const PAGE_SIZE = 20;
 
-function EvaluatorDashboard({ cycleId, onBack, onComplete }) {
+function EvaluatorDashboard({ cycleId, onBack, onComplete, initialEvaluationId }) {
     const [evals, setEvals]           = useState([]);
     const [loading, setLoading]       = useState(true);
     const [selected, setSelected]     = useState(null);
@@ -49,6 +49,14 @@ function EvaluatorDashboard({ cycleId, onBack, onComplete }) {
     useEffect(() => {
         fetchTeam(page, search);
     }, [page, search]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        if (initialEvaluationId && evals.length > 0 && !selected) {
+            const found = evals.find(e => e.id === initialEvaluationId);
+            if (found) {
+                setSelected(found);
+            }
+        }
+    }, [initialEvaluationId, evals, selected]);
 
     // When a user is selected, pre-populate ratings from their existing evaluator scores
     useEffect(() => {

@@ -27,6 +27,26 @@ function Dashboard() {
       const idStr = params.get('id');
       if (idStr) {
         setSelectedSubmissionId(parseInt(idStr, 10));
+        setActiveForm('view_submission');
+      }
+    } else if (params.get('view') === 'team_review') {
+      setShowHistory(false);
+      setShowEvaluation(true);
+      setShowAnalytics(false);
+      setActiveForm('evaluator');
+      setViewRole('Coach');
+      const idStr = params.get('id');
+      if (idStr) {
+        setSelectedEvaluationId(parseInt(idStr, 10));
+      }
+    } else if (params.get('view') === 'results') {
+      setShowHistory(false);
+      setShowEvaluation(true);
+      setShowAnalytics(false);
+      setActiveForm('view_results');
+      const idStr = params.get('id');
+      if (idStr) {
+        setSelectedEvaluationId(parseInt(idStr, 10));
       }
     }
   }, [location.search]);
@@ -122,6 +142,7 @@ function Dashboard() {
               cycleId={0} 
               onBack={() => setShowEvaluation(false)} 
               onComplete={() => { setShowEvaluation(false); loadHistory(); }}
+              initialEvaluationId={selectedEvaluationId}
             />
           );
         }

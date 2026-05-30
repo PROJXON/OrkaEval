@@ -112,7 +112,7 @@ public class EvaluationService : IEvaluationService
                             Title = "Self-Evaluation Submitted",
                             Message = $"{submitterName} has submitted their self-evaluation for Cycle {cycleId}.",
                             Type = "Evaluation",
-                            Link = $"/dashboard",
+                            Link = $"/dashboard?view=team_review&id={eval.Id}",
                             CreatedAt = DateTime.UtcNow
                         });
                         await _db.SaveChangesAsync();
@@ -248,7 +248,7 @@ public class EvaluationService : IEvaluationService
                 Title = "Coach Review Submitted",
                 Message = $"Coach {evaluatorUser?.DisplayName} has submitted their review for your evaluation.",
                 Type = "Review",
-                Link = "/dashboard",
+                Link = $"/dashboard?view=results&id={eval.Id}",
                 CreatedAt = DateTime.UtcNow
             });
             await _db.SaveChangesAsync();

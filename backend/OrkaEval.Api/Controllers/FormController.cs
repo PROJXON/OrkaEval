@@ -84,7 +84,6 @@ public class FormController : ControllerBase
         {
             var notification = new Notification
             {
-                UserId = candidateId, // Note: candidateId here is the Candidate.Id, but UserId in Notification refers to User.Id
                 Title = "New Session Submitted",
                 Message = $"Coach {user.DisplayName} has submitted a new {req.FormType.Replace("_", " ")} record.",
                 Type = "Session",
@@ -96,6 +95,25 @@ public class FormController : ControllerBase
             if (targetCandidate != null && targetCandidate.User != null && targetCandidate.User.NotificationsEnabled)
             {
                 notification.UserId = targetCandidate.UserId;
+                _db.Notifications.Add(notification);
+                await _db.SaveChangesAsync();
+            }
+        }
+        else if (coachId.HasValue)
+        {
+            // Candidate submitted a form (e.g. check-in), notify the coach
+            var targetCoach = await _db.Coaches.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == coachId.Value);
+            if (targetCoach != null && targetCoach.User != null && targetCoach.User.NotificationsEnabled)
+            {
+                var notification = new Notification
+                {
+                    UserId = targetCoach.UserId,
+                    Title = "Team Member Submitted Session",
+                    Message = $"{user.DisplayName} has submitted a new {req.FormType.Replace("_", " ")} record.",
+                    Type = "Session",
+                    Link = $"/dashboard?view=history&id={submission.Id}",
+                    CreatedAt = DateTime.UtcNow
+                };
                 _db.Notifications.Add(notification);
                 await _db.SaveChangesAsync();
             }

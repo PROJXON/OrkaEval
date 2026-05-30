@@ -47,7 +47,7 @@ function Dashboard() {
   const [activeForm, setActiveForm] = useState('performance_review');
   const [showEvaluation, setShowEvaluation] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [formData, setFormData] = useState({});
+
   const [selectedEvaluationId, setSelectedEvaluationId] = useState(null);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
   const [msg, setMsg] = useState(null);
@@ -110,30 +110,6 @@ function Dashboard() {
     window.location.href = '/';
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    if (viewRole === 'Coach' && !selectedCandidateId) {
-      setMsg({ type: 'error', text: 'Please select a team member first.' });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await submitForm({
-        candidateId: selectedCandidateId ? parseInt(selectedCandidateId) : null,
-        formType: activeForm,
-        formData: JSON.stringify(formData)
-      });
-      setMsg({ type: 'success', text: 'Form submitted successfully!' });
-      setFormData({});
-      loadHistory();
-    } catch (err) {
-      setMsg({ type: 'error', text: 'Submission failed. Please try again.' });
-    } finally {
-      setLoading(false);
-      setTimeout(() => setMsg(null), 3000);
-    }
-  };
 
   const renderForm = () => {
     if (showEvaluation) {

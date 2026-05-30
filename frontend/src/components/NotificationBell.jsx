@@ -125,7 +125,7 @@ export default function NotificationBell() {
                                     onClick={async () => {
                                         await handleMarkAsRead(n.id);
                                         if (n.link) {
-                                            navigate(n.link.replace('/dashboard', ''));
+                                            navigate(n.link);
                                             setShowDropdown(false);
                                         }
                                     }}

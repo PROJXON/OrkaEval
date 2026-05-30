@@ -93,11 +93,11 @@ public class AnalyticsService : IAnalyticsService
         if (!evals.Any()) return 0;
         var scores = evals.Select(e => competency switch
         {
-            "technical" => e.Competencies.TechnicalSkills.EvaluatorRating ?? 0,
-            "communication" => e.Competencies.Communication.EvaluatorRating ?? 0,
-            "leadership" => e.Competencies.Leadership.EvaluatorRating ?? 0,
-            "growth" => e.Competencies.GrowthLearning.EvaluatorRating ?? 0,
-            "culture" => e.Competencies.Culture.EvaluatorRating ?? 0,
+            "technical" => e.Competencies?.TechnicalSkills?.EvaluatorRating ?? 0,
+            "communication" => e.Competencies?.Communication?.EvaluatorRating ?? 0,
+            "leadership" => e.Competencies?.Leadership?.EvaluatorRating ?? 0,
+            "growth" => e.Competencies?.GrowthLearning?.EvaluatorRating ?? 0,
+            "culture" => e.Competencies?.Culture?.EvaluatorRating ?? 0,
             _ => 0
         }).Where(s => s > 0).ToList();
 
@@ -106,12 +106,13 @@ public class AnalyticsService : IAnalyticsService
 
     private double CalculateOverallScore(Evaluation e)
     {
+        if (e.Competencies == null) return 0;
         var scores = new List<int?> {
-            e.Competencies.TechnicalSkills.EvaluatorRating,
-            e.Competencies.Communication.EvaluatorRating,
-            e.Competencies.Leadership.EvaluatorRating,
-            e.Competencies.GrowthLearning.EvaluatorRating,
-            e.Competencies.Culture.EvaluatorRating
+            e.Competencies.TechnicalSkills?.EvaluatorRating,
+            e.Competencies.Communication?.EvaluatorRating,
+            e.Competencies.Leadership?.EvaluatorRating,
+            e.Competencies.GrowthLearning?.EvaluatorRating,
+            e.Competencies.Culture?.EvaluatorRating
         }.Where(s => s.HasValue && s.Value > 0).Select(s => s!.Value).ToList();
 
         return scores.Any() ? scores.Average() : 0;

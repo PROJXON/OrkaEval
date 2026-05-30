@@ -69,7 +69,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 // ── AutoMapper ────────────────────────────────────────────────────────────────
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(Program).Assembly));
 
 // ── Authentication ────────────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"];

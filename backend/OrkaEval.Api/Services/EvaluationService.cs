@@ -230,6 +230,24 @@ public class EvaluationService : IEvaluationService
         }
 
         await _db.SaveChangesAsync();
+
+        // Notify Candidate
+        var candidateUser = await _db.Users.FindAsync(eval.UserId);
+        var evaluatorUser = await _db.Users.FindAsync(evaluatorId);
+        if (candidateUser != null && candidateUser.NotificationsEnabled)
+        {
+            _db.Notifications.Add(new Notification
+            {
+                UserId = eval.UserId,
+                Title = "Coach Review Submitted",
+                Message = $"Coach {evaluatorUser?.DisplayName} has submitted their review for your evaluation.",
+                Type = "Review",
+                Link = "/dashboard",
+                CreatedAt = DateTime.UtcNow
+            });
+            await _db.SaveChangesAsync();
+        }
+
         await _auditService.LogAsync(evaluatorId, "EvaluatorReviewSaved", $"EvaluationId={evaluationId}");
         return _mapper.Map<EvaluationDto>(eval);
     }

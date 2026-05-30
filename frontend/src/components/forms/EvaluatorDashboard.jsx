@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getTeamEvaluations, saveEvaluatorReview } from '../../api';
 import toast from 'react-hot-toast';
 import { handleApiError } from '../../utils/errorHandler';
@@ -49,14 +49,17 @@ function EvaluatorDashboard({ cycleId, onBack, onComplete, initialEvaluationId }
     useEffect(() => {
         fetchTeam(page, search);
     }, [page, search]); // eslint-disable-line react-hooks/exhaustive-deps
+    const hasAutoSelected = useRef(false);
+
     useEffect(() => {
-        if (initialEvaluationId && evals.length > 0 && !selected) {
+        if (initialEvaluationId && evals.length > 0 && !hasAutoSelected.current) {
             const found = evals.find(e => e.id === initialEvaluationId);
             if (found) {
                 setSelected(found);
+                hasAutoSelected.current = true;
             }
         }
-    }, [initialEvaluationId, evals, selected]);
+    }, [initialEvaluationId, evals]);
 
     // When a user is selected, pre-populate ratings from their existing evaluator scores
     useEffect(() => {

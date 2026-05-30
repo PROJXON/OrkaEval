@@ -144,7 +144,7 @@ public class AuthController : ControllerBase
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user is null)
             {
-                var registerUrl = $"{GetFrontendUrl()}/#/register" +
+                var registerUrl = $"{GetFrontendUrl()}/register" +
                     $"?email={Uri.EscapeDataString(email)}" +
                     $"&name={Uri.EscapeDataString(displayName ?? "")}" +
                     $"&googleId={Uri.EscapeDataString(googleId)}" +

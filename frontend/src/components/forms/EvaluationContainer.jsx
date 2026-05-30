@@ -142,21 +142,6 @@ function EvaluationContainer({ cycleId, candidateId, onComplete, initialStep = 0
             }
         } else {
             await saveSelfEvaluation(cycleId, { ...formData, isDraft: isDraft });
-            if (!isDraft) {
-                // Clear all data for performance review too if submitted finally
-                const emptyData = {
-                    OpenDiscussion: {},
-                    CheckIn: { moodEmojis: [] },
-                    Coaching: { developmentTopics: [] },
-                    Competencies: {
-                        technicalSkills: {}, communication: {}, leadership: {}, growthLearning: {}, culture: {}
-                    },
-                    Reflection: {}
-                };
-                await saveSelfEvaluation(cycleId, emptyData);
-                setFormData(emptyData);
-                setSessionResetKey(k => k + 1);
-            }
         }
 
         setIsDirty(false);

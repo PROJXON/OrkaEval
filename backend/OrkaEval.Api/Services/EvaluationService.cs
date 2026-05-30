@@ -74,11 +74,16 @@ public class EvaluationService : IEvaluationService
         }
 
         var eval = await _db.Evaluations.FirstOrDefaultAsync(e => e.UserId == userId && e.CycleId == cycleId);
+        var wasDraft = true;
         if (eval == null)
         {
             eval = new Evaluation { UserId = userId, CycleId = cycleId };
             _db.Evaluations.Add(eval);
             await _auditService.LogAsync(userId, "EvaluationCreated", $"CycleId={cycleId}");
+        }
+        else
+        {
+            wasDraft = eval.Status == EvaluationStatus.Draft;
         }
 
         _mapper.Map(dto, eval);
@@ -91,7 +96,7 @@ public class EvaluationService : IEvaluationService
         await _auditService.LogAsync(userId, "EvaluationSubmitted", $"EvaluationId={eval.Id};CycleId={cycleId}");
 
         // Notify the coach when a candidate finalizes their self-evaluation
-        if (!dto.IsDraft)
+        if (!dto.IsDraft && wasDraft)
         {
             try
             {

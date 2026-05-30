@@ -253,7 +253,9 @@ public class FormController : ControllerBase
 
         Func<int, int?, int> getCycleNum = (candId, cycId) => {
             if (cycId == null) return 0;
-            return relevantCycles.Where(c => c.CandidateId == candId && c.StartDate <= relevantCycles.First(rc => rc.Id == cycId).StartDate).Count();
+            var targetCycle = relevantCycles.FirstOrDefault(rc => rc.Id == cycId);
+            if (targetCycle == null) return 0;
+            return relevantCycles.Where(c => c.CandidateId == candId && c.StartDate <= targetCycle.StartDate).Count();
         };
 
         var history = historyData.Select(s => new {

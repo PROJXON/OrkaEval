@@ -99,6 +99,7 @@ public static class DataInitializer
 
         var candidate = new Candidate { UserId = user.Id, FullName = user.DisplayName, Email = user.Email, StartDate = user.StartDate, CycleStart = user.StartDate, CycleEnd = user.StartDate.AddDays(56) };
         db.Candidates.Add(candidate);
+        await db.SaveChangesAsync();
 
         db.Cycles.Add(new Cycle { CandidateId = candidate.Id, Number = 1, StartDate = candidate.CycleStart, EndDate = candidate.CycleEnd });
         await db.SaveChangesAsync();

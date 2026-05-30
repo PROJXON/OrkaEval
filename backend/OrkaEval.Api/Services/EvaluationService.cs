@@ -217,6 +217,12 @@ public class EvaluationService : IEvaluationService
 
         if (dto.Competencies != null)
         {
+            eval.Competencies.TechnicalSkills ??= new();
+            eval.Competencies.Communication ??= new();
+            eval.Competencies.Leadership ??= new();
+            eval.Competencies.GrowthLearning ??= new();
+            eval.Competencies.Culture ??= new();
+
             eval.Competencies.TechnicalSkills.EvaluatorRating = dto.Competencies.OnlyTechnicalSkills.EvaluatorRatingValue;
             eval.Competencies.TechnicalSkills.EvaluatorNotes = dto.Competencies.OnlyTechnicalSkills.EvaluatorNotes;
             eval.Competencies.Communication.EvaluatorRating = dto.Competencies.OnlyCommunication.EvaluatorRatingValue;

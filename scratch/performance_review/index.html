@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance Review | Projxon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f7fa; --surf: #ffffff; --surf2: #f8f9fc; --surf3: #eef1f7;
+      --bdr: rgba(0,0,0,.08); --bdr2: rgba(0,0,0,.12);
+      --t: #0f172a; --t2: #334155; --t3: #4b5563;
+      --a: #2563eb; --a2: #7c3aed; --cy: #0891b2;
+      --go: #d97706; --gr: #059669; --re: #dc2626; --or: #ea580c;
+      --gb: rgba(37,99,235,.25);
+      --gm: linear-gradient(135deg,#2563eb,#7c3aed);
+      --gcy: linear-gradient(135deg,#0891b2,#2563eb);
+      --gfi: linear-gradient(135deg,#ea580c,#dc2626);
+      --ggd: linear-gradient(135deg,#d97706,#ea580c);
+      --shadow: 0 4px 20px rgba(0,0,0,.05),0 1px 3px rgba(0,0,0,.03);
+      --shadow-lg: 0 12px 38px rgba(0,0,0,.08),0 2px 10px rgba(0,0,0,.04);
+      --r: 20px; --rs: 14px; --rx: 10px;
+      --ff: 'DM Sans',sans-serif; --fm: 'DM Mono',monospace;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--ff);background:var(--bg);color:var(--t);min-height:100vh;overflow-x:hidden;font-size:16px;line-height:1.6;padding-top:110px}
+    
+    /* Progress and HUD Bar */
+    .prail{position:fixed;top:0;left:0;right:0;height:4px;background:var(--surf3);z-index:1100}
+    .pfill{height:100%;background:var(--gm);transition:width .6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px var(--gb);width:0%}
+    .hud{position:fixed;top:4px;left:0;right:0;z-index:1099;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);padding:10px 24px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 8px rgba(0,0,0,.04);height:50px}
+    .hud-logo{font-weight:800;font-size:15px;letter-spacing:-.3px;background:var(--gm);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap}
+    .hud-div{width:1px;height:20px;background:var(--bdr2);flex-shrink:0}
+    .hud-lv{font-family:var(--fm);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:var(--gm);color:#fff;white-space:nowrap;flex-shrink:0}
+    .hud-track{flex:1;height:8px;background:var(--surf3);border-radius:4px;overflow:hidden;border:1px solid var(--bdr);min-width:60px}
+    .hud-xfill{height:100%;background:var(--gm);border-radius:4px;transition:width .9s cubic-bezier(.34,1.56,.64,1);width:0%}
+    .hud-xt{font-family:var(--fm);font-size:11px;color:var(--cy);white-space:nowrap;font-weight:700}
+    .hud-str{font-size:13px;white-space:nowrap;color:var(--t2);font-weight:600}
+    
+    /* Timer Panel */
+    .float-timer{position:fixed;top:54px;left:0;right:0;z-index:1098;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr);padding:0 24px;display:flex;align-items:stretch;gap:0;box-shadow:0 2px 10px rgba(0,0,0,.03);height:50px}
+    .ft-phase{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 8px;border-right:1px solid var(--bdr);transition:background .3s;min-width:0}
+    .ft-phase:last-child{border-right:none}
+    .ft-phase.ft-idle{background:transparent}
+    .ft-phase.ft-active{background:rgba(37,99,235,.05)}
+    .ft-phase.ft-done{background:rgba(5,150,105,.05)}
+    .ft-phase.ft-warn{background:rgba(220,38,38,.05)}
+    .ft-dot{width:8px;height:8px;border-radius:50%;background:var(--bdr2);flex-shrink:0;transition:background .3s}
+    .ft-phase.ft-active .ft-dot{background:var(--a);animation:fdot 1s ease-in-out infinite}
+    .ft-phase.ft-done .ft-dot{background:var(--gr);animation:none}
+    .ft-phase.ft-warn .ft-dot{background:var(--re);animation:fdot .5s ease-in-out infinite}
+    @keyframes fdot{0%,100%{opacity:1}50%{opacity:.3}}
+    .ft-name{font-size:10px;font-weight:700;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.05em;text-transform:uppercase}
+    .ft-phase.ft-active .ft-name{color:var(--a)}
+    .ft-phase.ft-done .ft-name{color:var(--gr)}
+    .ft-phase.ft-warn .ft-name{color:var(--re)}
+    .ft-time{font-family:var(--fm);font-size:14px;font-weight:700;color:var(--t3);white-space:nowrap;transition:color .3s}
+    .ft-phase.ft-active .ft-time{color:var(--a)}
+    .ft-phase.ft-done .ft-time{color:var(--gr)}
+    .ft-phase.ft-warn .ft-time{color:var(--re);animation:dw .8s infinite}
+    .ft-sound{display:flex;align-items:center;gap:6px;padding:0 16px;border-left:1px solid var(--bdr);font-size:12px;font-weight:600;color:var(--t3);cursor:pointer;user-select:none;flex-shrink:0;transition:color .2s;white-space:nowrap}
+    .ft-sound:hover{color:var(--a)}
+    .ft-sound.on{color:var(--a)}
+    .ft-sound-ico{font-size:15px;line-height:1}
+    .ft-total{display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid var(--bdr);flex-shrink:0}
+    .ft-total-lbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
+    .ft-total-time{font-family:var(--fm);font-size:16px;font-weight:700;color:var(--a);line-height:1;transition:color .3s}
+    .ft-total-time.warn{color:var(--re)!important;animation:dw .8s infinite}
+    .ft-total-time.done{color:var(--gr)!important}
+
+    /* Timer Action Panel */
+    .timer-control-panel {
+      background: var(--surf);
+      border: 1px solid var(--bdr);
+      border-radius: var(--rs);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: var(--shadow);
+    }
+    .timer-info-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .timer-info-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .timer-info-val {
+      font-family: var(--fm);
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--a);
+      line-height: 1;
+    }
+    .timer-info-val.warn {
+      color: var(--re);
+      animation: dw 0.8s infinite;
+    }
+
+    /* Stepper Wizard Styling */
+    .stepper-wrap {
+      position: relative;
+      padding: 20px 0;
+      margin-bottom: 28px;
+    }
+    .stepper-9 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    .stepper-9::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--surf3);
+      z-index: 1;
+    }
+    .s9-item {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      flex: 1;
+    }
+    .s9-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surf);
+      border: 3px solid var(--surf3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--t3);
+      transition: all 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    .s9-lbl {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--t3);
+      transition: all 0.3s;
+      text-align: center;
+    }
+    .s9-item.active .s9-dot {
+      border-color: var(--a);
+      background: rgba(37,99,235,.1);
+      color: var(--a);
+      transform: scale(1.15);
+      box-shadow: 0 0 12px var(--gb);
+    }
+    .s9-item.active .s9-lbl {
+      color: var(--a);
+    }
+    .s9-item.done .s9-dot {
+      background: var(--gr);
+      border-color: var(--gr);
+      color: #fff;
+    }
+    .s9-item.done .s9-lbl {
+      color: var(--gr);
+    }
+
+    /* Main Cards Layout */
+    .shell{max-width:860px;margin:0 auto;padding:40px 20px 100px;position:relative}
+    .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:36px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:transform 0.4s ease, opacity 0.4s ease;}
+    .card.step-hidden {display:none;opacity:0;transform:translateY(15px)}
+    .card.step-active {display:block;opacity:1;transform:translateY(0);animation:au .5s cubic-bezier(.4,0,.2,1) both}
+    .cstripe{position:absolute;top:0;left:0;right:0;height:4px}
+    .ch{display:flex;align-items:flex-start;gap:16px;margin-bottom:28px}
+    .cico{width:48px;height:48px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;background:var(--surf2);border:1px solid var(--bdr)}
+    .csn{font-family:var(--fm);font-size:10px;color:var(--a);letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px}
+    .ct{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--t)}
+    .cs{font-size:14px;color:var(--t3);margin-top:4px;font-style:italic}
+    
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .div{border:none;border-top:1px solid var(--bdr);margin:24px 0}
+    .fld{display:flex;flex-direction:column;gap:8px}
+    label{font-size:14px;font-weight:700;color:var(--t2)}
+    label .req{color:var(--re)}
+    
+    input[type=text],input[type=email],select,textarea{font-family:var(--ff);width:100%;padding:14px 16px;border-radius:var(--rx);border:1.5px solid var(--bdr2);font-size:15px;color:var(--t);background:var(--surf2);outline:none;transition:border-color .2s,box-shadow .2s}
+    input:focus,textarea:focus,select:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+    input::placeholder,textarea::placeholder{color:var(--t3)}
+    input.ro{color:var(--t3);background:var(--surf3);cursor:default}
+    input.af{color:var(--a);background:rgba(37,99,235,.05);border-color:rgba(37,99,235,.25);font-weight:600}
+    textarea{resize:vertical;min-height:120px;line-height:1.6}
+    
+    /* Autocomplete Dropdown */
+    .ac-wrap{position:relative}
+    .ac-drop{position:absolute;top:calc(100% + 5px);left:0;right:0;background:var(--surf);border:1.5px solid var(--bdr2);border-radius:var(--rs);z-index:900;overflow:hidden;box-shadow:var(--shadow-lg);display:none;max-height:280px;overflow-y:auto}
+    .ac-drop.open{display:block;animation:acIn .16s ease both}
+    @keyframes acIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+    .ac-item{padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--bdr);transition:background .12s}
+    .ac-item:last-child{border-bottom:none}
+    .ac-item:hover,.ac-item.hi{background:rgba(37,99,235,.06)}
+    .ac-item-left{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .ac-item-name{font-size:14px;font-weight:700;color:var(--t)}
+    .ac-item-name em{color:var(--a);font-style:normal;font-weight:800}
+    .ac-item-email{font-size:12px;color:var(--t3);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ac-item-dept{font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 10px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(37,99,235,.1);color:var(--a);border:1px solid rgba(37,99,235,.15)}
+    .ac-empty{padding:14px 16px;font-size:14px;color:var(--t3);text-align:center;font-style:italic}
+    .ac-loading{padding:14px 16px;font-size:14px;color:var(--cy);text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}
+    .ac-spin{width:14px;height:14px;border:2px solid rgba(8,145,178,.2);border-top-color:var(--cy);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    
+    /* Info Chips */
+    .info-chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:100px;background:rgba(5,150,105,.1);color:var(--gr);border:1px solid rgba(5,150,105,.2);opacity:0;transition:opacity .3s;pointer-events:none}
+    .info-chip.show{opacity:1}
+    .info-chip-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+    .team-pill{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--rx);border:1.5px solid var(--bdr2);background:var(--surf2);min-height:50px;transition:all .3s}
+    .team-pill.filled{border-color:rgba(37,99,235,.25);background:rgba(37,99,235,.04)}
+    .team-ico{font-size:18px;flex-shrink:0}
+    .team-name{font-size:14px;font-weight:700;color:var(--t3);font-style:italic;transition:color .3s}
+    .team-pill.filled .team-name{color:var(--a);font-style:normal}
+    
+    /* Banner/Notification */
+    .roster-err{display:none;background:rgba(220,38,38,.07);border:1.5px solid rgba(220,38,38,.15);color:var(--re);border-radius:var(--rx);padding:12px 16px;font-size:14px;font-weight:600;margin-bottom:18px;align-items:center;gap:10px}
+    .roster-err.show{display:flex}
+    .sec-badge{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:6px 12px;border-radius:100px;border:1.5px solid var(--bdr2);background:var(--surf2);font-family:var(--fm);font-size:11px;font-weight:700;color:var(--t3);cursor:default}
+    .sec-badge.idle{color:var(--t3);border-color:var(--bdr2);background:var(--surf2)}
+    .sec-badge.live{color:var(--a);border-color:rgba(37,99,235,.3);background:rgba(37,99,235,.05);animation:sbPulse 2s ease-in-out infinite}
+    .sec-badge.live.warn{color:var(--re);border-color:rgba(220,38,38,.3);background:rgba(220,38,38,.05);animation:none}
+    .sec-badge.done{color:var(--gr);border-color:rgba(5,150,105,.25);background:rgba(5,150,105,.05)}
+    @keyframes sbPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.2)}50%{box-shadow:0 0 0 5px rgba(37,99,235,0)}}
+    .sb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+    .sec-badge.live .sb-dot{animation:fdot 1s ease-in-out infinite}
+    
+    /* Reflection Box */
+    .ib {background:rgba(37,99,235,.05);border:1.5px solid rgba(37,99,235,.15);border-radius:var(--rs);padding:18px 20px;display:flex;align-items:center;gap:14px;min-height:68px;margin-bottom:20px}
+    .ibico{font-size:28px;flex-shrink:0}
+    .ibtxt{font-size:15px;font-weight:700;color:var(--t);line-height:1.5}
+    
+    /* Rating Buttons */
+    .rating-wrapper {
+      margin-bottom: 24px;
+    }
+    .rating-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-radius: var(--rs);
+      background: var(--surf2);
+      border: 1px solid var(--bdr);
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .rating-label {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--t);
+      display: flex;
+      flex-direction: column;
+    }
+    .rating-sub {
+      font-size: 12px;
+      color: var(--t3);
+      font-weight: 400;
+      margin-top: 3px;
+    }
+    .rating-options {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-rate {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      border: 1.5px solid var(--bdr2);
+      background: var(--surf);
+      color: var(--t2);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(.4,0,.2,1);
+      padding: 0;
+    }
+    .btn-rate:hover {
+      border-color: var(--a);
+      color: var(--a);
+      background: rgba(37,99,235,.04);
+      transform: scale(1.05);
+    }
+    .btn-rate.selected {
+      background: var(--gm);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 10px var(--gb);
+      transform: scale(1.1);
+    }
+    
+    /* Buttons and Navigation */
+    button{font-family:var(--ff);border:none;border-radius:var(--rs);padding:14px 24px;cursor:pointer;font-size:15px;font-weight:700;transition:all .2s cubic-bezier(.4,0,.2,1);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    button:disabled{opacity:.4;cursor:not-allowed}
+    .bgo{background:var(--gm);color:#fff;box-shadow:0 4px 14px var(--gb)}
+    .bgo:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px var(--gb)}
+    .bgh{background:var(--surf2);color:var(--t2);border:1.5px solid var(--bdr2)}
+    .bgh:hover:not(:disabled){background:var(--surf3);color:var(--t)}
+    .bdn{background:rgba(220,38,38,.07);color:var(--re);border:1.5px solid rgba(220,38,38,.15)}
+    .bdn:hover:not(:disabled){background:rgba(220,38,38,.12)}
+    .bsv{background:var(--gm);color:#fff;font-size:16px;font-weight:800;padding:16px 36px;border-radius:var(--rs);box-shadow:0 4px 20px var(--gb)}
+    .bsv:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px var(--gb)}
+    .wizard-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--bdr);
+    }
+    .brow{display:flex;gap:10px;flex-wrap:wrap}
+    
+    /* Dialog Overlay */
+    .ovl{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+    .ovl.show{display:flex}
+    .mod{background:var(--surf);border:1px solid var(--bdr2);border-radius:24px;padding:44px 40px;max-width:460px;width:92%;text-align:center;box-shadow:var(--shadow-lg);animation:mIn .45s cubic-bezier(.34,1.56,.64,1) both;position:relative;overflow:hidden}
+    .mod::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--gm)}
+    @keyframes mIn{from{transform:scale(.78) translateY(24px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+    .mico{font-size:64px;margin-bottom:14px}
+    .mttl{font-size:26px;font-weight:900;letter-spacing:-.5px;margin-bottom:10px;background:var(--gm);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .mbod{font-size:15px;color:var(--t2);line-height:1.7;margin-bottom:24px}
+    
+    /* XP System notifications */
+    .xpt{position:fixed;top:115px;right:18px;z-index:3000;background:var(--surf);border:1.5px solid var(--bdr2);border-radius:var(--rs);padding:10px 18px;font-family:var(--fm);font-size:13px;font-weight:700;color:var(--a);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:7px;animation:tin .38s cubic-bezier(.34,1.56,.64,1) both,tout .28s ease 2.1s both}
+    @keyframes tin{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes tout{from{opacity:1}to{opacity:0;transform:translateX(120%)}}
+    
+    /* Confetti */
+    .conf{position:fixed;pointer-events:none;z-index:9999;animation:cf linear forwards;border-radius:2px}
+    @keyframes cf{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+    @keyframes dw{0%,100%{opacity:1}50%{opacity:.5}}
+    @keyframes au{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+    
+    /* Summary / Recap Table */
+    .recap-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .recap-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-radius: var(--rx);
+      background: var(--surf2);
+      border: 1px solid var(--bdr);
+    }
+    .recap-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--t2);
+    }
+    .recap-score {
+      font-family: var(--fm);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--a);
+      background: rgba(37,99,235,.07);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .sbar{display:none;margin-top:16px;padding:14px 18px;border-radius:var(--rx);font-size:15px;font-weight:600;align-items:center;gap:10px}
+    .sbar.show{display:flex}
+    .sbar.info{background:rgba(37,99,235,.08);color:var(--a);border:1.5px solid rgba(37,99,235,.2)}
+    .sbar.success{background:rgba(5,150,105,.08);color:var(--gr);border:1.5px solid rgba(5,150,105,.2)}
+    .sbar.error{background:rgba(220,38,38,.08);color:var(--re);border:1.5px solid rgba(220,38,38,.2)}
+    .sbar.warn{background:rgba(217,119,6,.08);color:var(--go);border:1.5px solid rgba(217,119,6,.2)}
+
+    @media(max-width:680px){
+      body{padding-top:120px}
+      .g2{grid-template-columns:1fr}
+      .hud-logo{font-size:13px}
+      .s9-lbl{display:none}
+      .rating-row {flex-direction: column; align-items: flex-start; gap: 12px;}
+      .rating-options {align-self: flex-start;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="prail"><div class="pfill" id="pfill"></div></div>
+
+<!-- Header HUD -->
+<div class="hud">
+  <div class="hud-logo">PROJXON · EVAL</div>
+  <div class="hud-div"></div>
+  <div class="hud-lv" id="hudLv">LV 1</div>
+  <div class="hud-track"><div class="hud-xfill" id="xfill"></div></div>
+  <div class="hud-xt" id="xtext">0 / 28 XP</div>
+  <div class="hud-str" id="xstr">🔥 0 filled</div>
+</div>
+
+<!-- Floating timer bar -->
+<div class="float-timer" id="floatTimer">
+  <div class="ft-phase ft-idle" id="ftp1"><div class="ft-dot"></div><span class="ft-name">Competency Review</span><span class="ft-time" id="ftt1">15:00</span></div>
+  <div class="ft-phase ft-idle" id="ftp2"><div class="ft-dot"></div><span class="ft-name">Reflection</span><span class="ft-time" id="ftt2">05:00</span></div>
+  <div class="ft-phase ft-idle" id="ftp3"><div class="ft-dot"></div><span class="ft-name">Goals</span><span class="ft-time" id="ftt3">07:00</span></div>
+  <div class="ft-phase ft-idle" id="ftp4"><div class="ft-dot"></div><span class="ft-name">Recap</span><span class="ft-time" id="ftt4">03:00</span></div>
+  <div class="ft-total"><div><div class="ft-total-lbl">Total Left</div><div class="ft-total-time" id="ftTotal">30:00</div></div></div>
+  <div class="ft-sound" id="soundToggle" onclick="toggleSound()" title="Toggle timer sounds">
+    <span class="ft-sound-ico" id="soundIco">🔇</span><span id="soundLbl">Sound</span>
+  </div>
+</div>
+
+<!-- Level up overlay -->
+<div class="ovl" id="ovl">
+  <div class="mod">
+    <div class="mico">🎉</div>
+    <div class="mttl">Review Completed!</div>
+    <div class="mbod">You have completed all competency ratings and reflection fields. Go to the recap screen to save and email.</div>
+    <button class="bgo" onclick="document.getElementById('ovl').classList.remove('show');goToStep(7);">✓ Go to Recap →</button>
+  </div>
+</div>
+
+<!-- Shell Wrapper -->
+<div class="shell">
+
+  <!-- Stepper indicators -->
+  <div class="stepper-wrap">
+    <div class="stepper-9" id="stepper">
+      <div class="s9-item active" onclick="goToStep(0)"><div class="s9-dot">0</div><span class="s9-lbl">Setup</span></div>
+      <div class="s9-item" onclick="goToStep(1)"><div class="s9-dot">1</div><span class="s9-lbl">Tech</span></div>
+      <div class="s9-item" onclick="goToStep(2)"><div class="s9-dot">2</div><span class="s9-lbl">Comms</span></div>
+      <div class="s9-item" onclick="goToStep(3)"><div class="s9-dot">3</div><span class="s9-lbl">Lead</span></div>
+      <div class="s9-item" onclick="goToStep(4)"><div class="s9-dot">4</div><span class="s9-lbl">Growth</span></div>
+      <div class="s9-item" onclick="goToStep(5)"><div class="s9-dot">5</div><span class="s9-lbl">Culture</span></div>
+      <div class="s9-item" onclick="goToStep(6)"><div class="s9-dot">6</div><span class="s9-lbl">Reflect</span></div>
+      <div class="s9-item" onclick="goToStep(7)"><div class="s9-dot">7</div><span class="s9-lbl">Submit</span></div>
+    </div>
+  </div>
+
+  <!-- Timer Actions Bar (only on steps after setup) -->
+  <div class="timer-control-panel" id="timerPanel">
+    <div class="timer-info-block">
+      <span class="timer-info-title">Remaining Time</span>
+      <span class="timer-info-val" id="mTimer">30:00</span>
+    </div>
+    <div class="brow">
+      <button class="bgo" id="sBtn" onclick="startM()">▶ Start Meeting</button>
+      <button class="bgh" onclick="resetM()">↺ Reset</button>
+      <button class="bdn" onclick="endM()">■ End Early</button>
+    </div>
+  </div>
+
+  <!-- STEP 0: SETUP CARD -->
+  <div class="card step-active" data-step="0">
+    <div class="cstripe" style="background:var(--gm)"></div>
+    <div class="ch">
+      <div class="cico">👥</div>
+      <div>
+        <div class="csn">Setup Step</div>
+        <div class="ct">Session Information</div>
+        <div class="cs">Search the roster to auto-fill coach, coachee, and team details.</div>
+      </div>
+    </div>
+
+    <div class="roster-err" id="rosterErrBanner">
+      ⚠️ <span id="rosterErrMsg">Roster could not be loaded.</span>
+      You can still enter names manually.
+    </div>
+
+    <div class="g2">
+      <div class="fld">
+        <label for="coachName">Coach Name <span class="req">*</span>
+          <span class="info-chip" id="cChip"><span class="info-chip-dot"></span>Auto-filled</span>
+        </label>
+        <div class="ac-wrap">
+          <input id="coachName" type="text" placeholder="Start typing coach name…" autocomplete="off"
+                 oninput="acInput('c')" onkeydown="acKey(event,'c')"
+                 onfocus="acInput('c')" onblur="setTimeout(function(){acClose('c')},220)"/>
+          <div class="ac-drop" id="acDropC"></div>
+        </div>
+      </div>
+
+      <div class="fld">
+        <label for="coachEmail">Coach Email <span class="req">*</span>
+          <span class="info-chip" id="cEmailChip"><span class="info-chip-dot"></span>Auto-filled</span>
+        </label>
+        <input id="coachEmail" type="email" placeholder="Will auto-fill from roster…"
+               oninput="xi(this,'coachEmail');chipShow('cEmailChip',this.value.trim()!='')"/>
+      </div>
+
+      <div class="fld">
+        <label for="coacheeName">Coachee Name <span class="req">*</span>
+          <span class="info-chip" id="pChip"><span class="info-chip-dot"></span>Auto-filled</span>
+        </label>
+        <div class="ac-wrap">
+          <input id="coacheeName" type="text" placeholder="Start typing coachee name…" autocomplete="off"
+                 oninput="acInput('p')" onkeydown="acKey(event,'p')"
+                 onfocus="acInput('p')" onblur="setTimeout(function(){acClose('p')},220)"/>
+          <div class="ac-drop" id="acDropP"></div>
+        </div>
+      </div>
+
+      <div class="fld">
+        <label for="coacheeEmail">Coachee Email <span class="req">*</span>
+          <span class="info-chip" id="pEmailChip"><span class="info-chip-dot"></span>Auto-filled</span>
+        </label>
+        <input id="coacheeEmail" type="email" placeholder="Will auto-fill from roster…"
+               oninput="xi(this,'coacheeEmail');chipShow('pEmailChip',this.value.trim()!='')"/>
+      </div>
+
+      <div class="fld">
+        <label>Team
+          <span class="info-chip" id="teamChip"><span class="info-chip-dot"></span>Auto-filled</span>
+        </label>
+        <div class="team-pill" id="teamPill">
+          <span class="team-ico">🏢</span>
+          <span class="team-name" id="teamName">Choose coachee to auto-fill team...</span>
+        </div>
+        <input type="hidden" id="teamHid"/>
+      </div>
+
+      <div class="fld">
+        <label>Date &amp; Time</label>
+        <input id="dtm" class="ro" type="text" readonly/>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <div></div>
+      <button class="bgo" onclick="goToStep(1)">Next: Tech Competency →</button>
+    </div>
+  </div>
+
+  <!-- STEP 1: TECHNICAL SKILLS -->
+  <div class="card step-hidden" data-step="1">
+    <div class="cstripe" style="background:var(--gm)"></div>
+    <div class="ch">
+      <div class="cico">💻</div>
+      <div>
+        <div class="csn">Competency 1 of 5</div>
+        <div class="ct">Technical Skills &amp; Quality</div>
+        <div class="cs">Code quality, problem solving, system knowledge, and testing.</div>
+        <div class="sec-badge idle" id="sb1"><span class="sb-dot"></span><span id="sb1T">⏱ Competency Review</span></div>
+      </div>
+    </div>
+
+    <div class="rating-wrapper">
+      <div class="rating-row" id="rowTech">
+        <div class="rating-label">
+          <span>Self-Rating <span class="req">*</span></span>
+          <span class="rating-sub">Provide a rating value from 1 to 5</span>
+        </div>
+        <div class="rating-options">
+          <button type="button" class="btn-rate" onclick="setRating('tech', 1)" title="Needs Improvement">1</button>
+          <button type="button" class="btn-rate" onclick="setRating('tech', 2)" title="Below Expectations">2</button>
+          <button type="button" class="btn-rate" onclick="setRating('tech', 3)" title="Meets Expectations">3</button>
+          <button type="button" class="btn-rate" onclick="setRating('tech', 4)" title="Above Expectations">4</button>
+          <button type="button" class="btn-rate" onclick="setRating('tech', 5)" title="Exceeds Expectations">5</button>
+        </div>
+      </div>
+      <input type="hidden" id="rateTech" value="" />
+    </div>
+
+    <div class="g2">
+      <div class="fld">
+        <label for="techEvidence">Evidence &amp; Examples <span class="req">*</span></label>
+        <textarea id="techEvidence" placeholder="Provide evidence/examples to justify this rating value..." oninput="xi(this,'techEvidence')"></textarea>
+      </div>
+      <div class="fld">
+        <label for="techAction">Proposed Growth Action Plan</label>
+        <textarea id="techAction" placeholder="What actions will help improve this skill set next cycle? (optional)..." oninput="xi(this,'techAction')"></textarea>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="bgh" onclick="goToStep(0)">← Setup</button>
+      <button class="bgo" onclick="goToStep(2)">Next: Comms →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: COMMUNICATION -->
+  <div class="card step-hidden" data-step="2">
+    <div class="cstripe" style="background:var(--gm)"></div>
+    <div class="ch">
+      <div class="cico">💬</div>
+      <div>
+        <div class="csn">Competency 2 of 5</div>
+        <div class="ct">Communication &amp; Collaboration</div>
+        <div class="cs">Teamwork, documentation, status updates, and overall clarity.</div>
+        <div class="sec-badge idle" id="sb2"><span class="sb-dot"></span><span id="sb2T">⏱ Competency Review</span></div>
+      </div>
+    </div>
+
+    <div class="rating-wrapper">
+      <div class="rating-row" id="rowComm">
+        <div class="rating-label">
+          <span>Self-Rating <span class="req">*</span></span>
+          <span class="rating-sub">Provide a rating value from 1 to 5</span>
+        </div>
+        <div class="rating-options">
+          <button type="button" class="btn-rate" onclick="setRating('comm', 1)" title="Needs Improvement">1</button>
+          <button type="button" class="btn-rate" onclick="setRating('comm', 2)" title="Below Expectations">2</button>
+          <button type="button" class="btn-rate" onclick="setRating('comm', 3)" title="Meets Expectations">3</button>
+          <button type="button" class="btn-rate" onclick="setRating('comm', 4)" title="Above Expectations">4</button>
+          <button type="button" class="btn-rate" onclick="setRating('comm', 5)" title="Exceeds Expectations">5</button>
+        </div>
+      </div>
+      <input type="hidden" id="rateComm" value="" />
+    </div>
+
+    <div class="g2">
+      <div class="fld">
+        <label for="commEvidence">Evidence &amp; Examples <span class="req">*</span></label>
+        <textarea id="commEvidence" placeholder="Provide evidence/examples to justify this rating value..." oninput="xi(this,'commEvidence')"></textarea>
+      </div>
+      <div class="fld">
+        <label for="commAction">Proposed Growth Action Plan</label>
+        <textarea id="commAction" placeholder="What actions will help improve communication? (optional)..." oninput="xi(this,'commAction')"></textarea>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="bgh" onclick="goToStep(1)">← Tech</button>
+      <button class="bgo" onclick="goToStep(3)">Next: Leadership →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: LEADERSHIP -->
+  <div class="card step-hidden" data-step="3">
+    <div class="cstripe" style="background:var(--gm)"></div>
+    <div class="ch">
+      <div class="cico">⚔️</div>
+      <div>
+        <div class="csn">Competency 3 of 5</div>
+        <div class="ct">Leadership &amp; Initiative</div>
+        <div class="cs">Ownership, mentoring, proactive action, and giving direction.</div>
+        <div class="sec-badge idle" id="sb3"><span class="sb-dot"></span><span id="sb3T">⏱ Competency Review</span></div>
+      </div>
+    </div>
+
+    <div class="rating-wrapper">
+      <div class="rating-row" id="rowLead">
+        <div class="rating-label">
+          <span>Self-Rating <span class="req">*</span></span>
+          <span class="rating-sub">Provide a rating value from 1 to 5</span>
+        </div>
+        <div class="rating-options">
+          <button type="button" class="btn-rate" onclick="setRating('lead', 1)" title="Needs Improvement">1</button>
+          <button type="button" class="btn-rate" onclick="setRating('lead', 2)" title="Below Expectations">2</button>
+          <button type="button" class="btn-rate" onclick="setRating('lead', 3)" title="Meets Expectations">3</button>
+          <button type="button" class="btn-rate" onclick="setRating('lead', 4)" title="Above Expectations">4</button>
+          <button type="button" class="btn-rate" onclick="setRating('lead', 5)" title="Exceeds Expectations">5</button>
+        </div>
+      </div>
+      <input type="hidden" id="rateLead" value="" />
+    </div>
+
+    <div class="g2">
+      <div class="fld">
+        <label for="leadEvidence">Evidence &amp; Examples <span class="req">*</span></label>
+        <textarea id="leadEvidence" placeholder="Provide evidence/examples to justify this rating value..." oninput="xi(this,'leadEvidence')"></textarea>
+      </div>
+      <div class="fld">
+        <label for="leadAction">Proposed Growth Action Plan</label>
+        <textarea id="leadAction" placeholder="What actions will help improve initiative and leadership? (optional)..." oninput="xi(this,'leadAction')"></textarea>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="bgh" onclick="goToStep(2)">← Comms</button>
+      <button class="bgo" onclick="goToStep(4)">Next: Growth →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: GROWTH & LEARNING -->
+  <div class="card step-hidden" data-step="4">
+    <div class="cstripe" style="background:var(--gm)"></div>
+    <div class="ch">
+      <div class="cico">📈</div>
+      <div>
+        <div class="csn">Competency 4 of 5</div>
+        <div class="ct">Growth &amp; Learning</div>
+        <div class="cs">Feedback reception, continuous self-improvement, and adaptation.</div>
+        <div class="sec-badge idle" id="sb4"><span class="sb-dot"></span><span id="sb4T">⏱ Competency Review</span></div>
+      </div>
+    </div>
+
+    <div class="rating-wrapper">
+      <div class="rating-row" id="rowGrowth">
+        <div class="rating-label">
+          <span>Self-Rating <span class="req">*</span></span>
+          <span class="rating-sub">Provide a rating value from 1 to 5</span>
+        </div>
+        <div class="rating-options">
+          <button type="button" class="btn-rate" onclick="setRating('growth', 1)" title="Needs Improvement">1</button>
+          <button type="button" class="btn-rate" onclick="setRating('growth', 2)" title="Below Expectations">2</button>
+          <button type="button" class="btn-rate" onclick="setRating('growth', 3)" title="Meets Expectations">3</button>
+          <button type="button" class="btn-rate" onclick="setRating('growth', 4)" title="Above Expectations">4</button>
+          <button type="button" class="btn-rate" onclick="setRating('growth', 5)" title="Exceeds Expectations">5</button>
+        </div>
+      </div>
+      <input type="hidden" id="rateGrowth" value="" />
+    </div>
+
+    <div class="g2">
+      <div class="fld">
+        <label for="growthEvidence">Evidence &amp; Examples <span class="req">*</span></label>
+        <textarea id="growthEvidence" placeholder="Provide evidence/examples to justify this rating value..." oninput="xi(this,'growthEvidence')"></textarea>
+      </div>
+      <div class="fld">
+        <label for="growthAction">Proposed Growth Action Plan</label>
+        <textarea id="growthAction" placeholder="What actions will help improve growth rate? (optional)..." oninput="xi(this,'growthAction')"></textarea>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="bgh" onclick="goToStep(3)">← Leadership</button>
+      <button class="bgo" onclick="goToStep(5)">Next: Culture →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: CULTURE -->
+  <div class="card step-hidden" data-step="5">
+    <div class="cstripe" style="background:var(--gm)"></div>
+    <div class="ch">
+      <div class="cico">🤝</div>
+      <div>
+        <div class="csn">Competency 5 of 5</div>
+        <div class="ct">Culture &amp; Professional Growth</div>
+        <div class="cs">Promoting company values, mentorship, alignment, and respect.</div>
+        <div class="sec-badge idle" id="sb5"><span class="sb-dot"></span><span id="sb5T">⏱ Competency Review</span></div>
+      </div>
+    </div>
+
+    <div class="rating-wrapper">
+      <div class="rating-row" id="rowCulture">
+        <div class="rating-label">
+          <span>Self-Rating <span class="req">*</span></span>
+          <span class="rating-sub">Provide a rating value from 1 to 5</span>
+        </div>
+        <div class="rating-options">
+          <button type="button" class="btn-rate" onclick="setRating('culture', 1)" title="Needs Improvement">1</button>
+          <button type="button" class="btn-rate" onclick="setRating('culture', 2)" title="Below Expectations">2</button>
+          <button type="button" class="btn-rate" onclick="setRating('culture', 3)" title="Meets Expectations">3</button>
+          <button type="button" class="btn-rate" onclick="setRating('culture', 4)" title="Above Expectations">4</button>
+          <button type="button" class="btn-rate" onclick="setRating('culture', 5)" title="Exceeds Expectations">5</button>
+        </div>
+      </div>
+      <input type="hidden" id="rateCulture" value="" />
+    </div>
+
+    <div class="g2">
+      <div class="fld">
+        <label for="cultureEvidence">Evidence &amp; Examples <span class="req">*</span></label>
+        <textarea id="cultureEvidence" placeholder="Provide evidence/examples to justify this rating value..." oninput="xi(this,'cultureEvidence')"></textarea>
+      </div>
+      <div class="fld">
+        <label for="cultureAction">Proposed Growth Action Plan</label>
+        <textarea id="cultureAction" placeholder="What actions will support positive culture growth? (optional)..." oninput="xi(this,'cultureAction')"></textarea>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="bgh" onclick="goToStep(4)">← Growth</button>
+      <button class="bgo" onclick="goToStep(6)">Next: Reflection &amp; Goals →</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: REFLECTION & GOALS -->
+  <div class="card step-hidden" data-step="6">
+    <div class="cstripe" style="background:var(--gm)"></div>
+    <div class="ch">
+      <div class="cico">📝</div>
+      <div>
+        <div class="csn">Self-Reflection</div>
+        <div class="ct">Reflection &amp; Future Goals</div>
+        <div class="cs">Analyze achievements, address challenges, and define next cycle's goals.</div>
+        <div class="sec-badge idle" id="sbReflect"><span class="sb-dot"></span><span id="sbReflectT">⏱ Reflection &amp; Goals</span></div>
+      </div>
+    </div>
+
+    <div class="ib" id="ibBox">
+      <span class="ibico">🏆</span>
+      <span class="ibtxt" id="ibTxt">Your reflection prompt will appear here the moment the meeting starts. Get ready!</span>
+    </div>
+
+    <div class="fld" style="margin-bottom:18px">
+      <label for="greatestAchievement">Greatest Achievements &amp; Wins <span class="req">*</span></label>
+      <textarea id="greatestAchievement" placeholder="Summarize key successes, projects delivered, or positive impact made during this cycle..." oninput="xi(this,'greatestAchievement')"></textarea>
+    </div>
+
+    <div class="g2" style="margin-bottom:18px">
+      <div class="fld">
+        <label for="biggestChallenge">Challenges &amp; Resolution</label>
+        <textarea id="biggestChallenge" placeholder="What challenges did you face, and how did you resolve them?..." oninput="xi(this,'biggestChallenge')"></textarea>
+      </div>
+      <div class="fld">
+        <label for="doDifferently">Self-Correction (What would you do differently?)</label>
+        <textarea id="doDifferently" placeholder="If you could restart, what would you alter about your approach?..." oninput="xi(this,'doDifferently')"></textarea>
+      </div>
+    </div>
+
+    <div class="g2" style="margin-bottom:18px">
+      <div class="fld">
+        <label for="goal1">Goal 1 (Short-term Objective) <span class="req">*</span></label>
+        <textarea id="goal1" placeholder="Define a specific, measurable goal for the next 2 months..." oninput="xi(this,'goal1')"></textarea>
+      </div>
+      <div class="fld">
+        <label for="goal2">Goal 2 (Medium-term Objective)</label>
+        <textarea id="goal2" placeholder="Define a goal to accomplish over the next 6 months..." oninput="xi(this,'goal2')"></textarea>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="fld">
+        <label for="priorityCompetency">Priority Focus Competency</label>
+        <select id="priorityCompetency" onchange="xi(this,'priorityCompetency')">
+          <option value="">-- Choose Competency to Prioritize --</option>
+          <option value="Technical Skills">Technical Skills &amp; Quality</option>
+          <option value="Communication">Communication &amp; Collaboration</option>
+          <option value="Leadership">Leadership &amp; Initiative</option>
+          <option value="Growth &amp; Learning">Growth &amp; Learning</option>
+          <option value="Culture">Culture &amp; Professional Growth</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label for="generalComments">General Feedback/Comments for Supervisor</label>
+        <textarea id="generalComments" placeholder="Any additional notes or questions for your evaluator?..." oninput="xi(this,'generalComments')"></textarea>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="bgh" onclick="goToStep(5)">← Culture</button>
+      <button class="bgo" onclick="goToStep(7)">Next: Recap &amp; Save →</button>
+    </div>
+  </div>
+
+  <!-- STEP 7: RECAP & SUBMIT -->
+  <div class="card step-hidden" data-step="7">
+    <div class="cstripe" style="background:var(--gm)"></div>
+    <div class="ch">
+      <div class="cico">💾</div>
+      <div>
+        <div class="csn">Recap &amp; Finalize</div>
+        <div class="ct">Recap &amp; Alignment</div>
+        <div class="cs">Review score breakdown, add final comments, and save to the database.</div>
+        <div class="sec-badge idle" id="sbRecap"><span class="sb-dot"></span><span id="sbRecapT">⏱ Recap &amp; Sign-off</span></div>
+      </div>
+    </div>
+
+    <div class="recap-grid">
+      <div class="recap-row">
+        <span class="recap-title">Technical Skills &amp; Quality</span>
+        <span class="recap-score" id="recapTech">— / 5</span>
+      </div>
+      <div class="recap-row">
+        <span class="recap-title">Communication &amp; Collaboration</span>
+        <span class="recap-score" id="recapComm">— / 5</span>
+      </div>
+      <div class="recap-row">
+        <span class="recap-title">Leadership &amp; Initiative</span>
+        <span class="recap-score" id="recapLead">— / 5</span>
+      </div>
+      <div class="recap-row">
+        <span class="recap-title">Growth &amp; Learning</span>
+        <span class="recap-score" id="recapGrowth">— / 5</span>
+      </div>
+      <div class="recap-row">
+        <span class="recap-title">Culture &amp; Professional Growth</span>
+        <span class="recap-score" id="recapCulture">— / 5</span>
+      </div>
+    </div>
+
+    <div class="fld" style="margin-bottom:24px">
+      <label for="overallComments">Overall Evaluator Comments <span class="req">*</span></label>
+      <textarea id="overallComments" placeholder="Enter summary evaluator feedback, feedback alignment, or recap takeaways..." oninput="xi(this,'overallComments')"></textarea>
+    </div>
+
+    <button class="bsv" id="recBtn" onclick="rec()">⚡ Record Performance Review</button>
+    <div class="sbar" id="sbar"><span id="sico"></span><span id="stxt"></span></div>
+
+    <div class="wizard-nav">
+      <button class="bgh" id="recapPrev" onclick="goToStep(6)">← Reflection</button>
+      <div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ROSTER CACHE
+// ═══════════════════════════════════════════════════════════
+var _rosterCache = null, _rosterLoading = false, _rosterCallbacks = [];
+
+function getRoster(cb) {
+  if (_rosterCache !== null) { cb(_rosterCache); return; }
+  _rosterCallbacks.push(cb);
+  if (_rosterLoading) return;
+  _rosterLoading = true;
+
+  google.script.run
+    .withSuccessHandler(function (r) {
+      _rosterCache   = Array.isArray(r) ? r : [];
+      _rosterLoading = false;
+      _rosterCallbacks.forEach(function (f) { f(_rosterCache); });
+      _rosterCallbacks = [];
+    })
+    .withFailureHandler(function (e) {
+      _rosterCache   = [];
+      _rosterLoading = false;
+      _rosterCallbacks.forEach(function (f) { f([]); });
+      _rosterCallbacks = [];
+      var banner = document.getElementById('rosterErrBanner');
+      var msg    = document.getElementById('rosterErrMsg');
+      if (banner && msg) {
+        msg.textContent = e && e.message ? e.message : 'Roster could not be loaded from spreadsheet.';
+        banner.classList.add('show');
+      }
+    })
+    .getTeamRoster();
+}
+
+getRoster(function () {}); // prefetch
+
+// ═══════════════════════════════════════════════════════════
+// AUTOCOMPLETE
+// ═══════════════════════════════════════════════════════════
+var _ac = { p: { hiIdx: -1, matches: [] }, c: { hiIdx: -1, matches: [] } };
+
+function _cfgFor(t) {
+  if (t === 'c') return { inputId: 'coachName', dropId: 'acDropC', chipId: 'cChip', emailId: 'coachEmail', emailChipId: 'cEmailChip', xpKey: 'coachName', emailXpKey: 'coachEmail', setDept: false };
+  return            { inputId: 'coacheeName', dropId: 'acDropP', chipId: 'pChip', emailId: 'coacheeEmail', emailChipId: 'pEmailChip', xpKey: 'coacheeName', emailXpKey: 'coacheeEmail', setDept: true };
+}
+
+function acInput(t) {
+  var cfg = _cfgFor(t), q = document.getElementById(cfg.inputId).value.trim().toLowerCase();
+  if (!q) { acClose(t); _clearAutoFill(t); return; }
+  var drop = document.getElementById(cfg.dropId);
+  drop.innerHTML = '<div class="ac-loading"><div class="ac-spin"></div> Searching...</div>';
+  drop.classList.add('open');
+  getRoster(function (roster) {
+    var m = roster.filter(function (p) { return p.name.toLowerCase().includes(q); }).slice(0, 10);
+    _ac[t].matches = m; _ac[t].hiIdx = -1; _renderDrop(t, m, q);
+  });
+}
+
+function _renderDrop(t, matches, q) {
+  var cfg = _cfgFor(t), drop = document.getElementById(cfg.dropId);
+  if (!matches.length) { drop.innerHTML = '<div class="ac-empty">No matches found</div>'; drop.classList.add('open'); return; }
+  drop.innerHTML = matches.map(function (p) {
+    var re = new RegExp('(' + escRe(q) + ')', 'gi');
+    var hN = p.name.replace(re, '<em>$1</em>');
+    return '<div class="ac-item" data-name="' + escAttr(p.name) + '" data-dept="' + escAttr(p.department) + '" data-email="' + escAttr(p.email) + '"' +
+           ' onmousedown="acPick(\'' + escAttr(t) + '\',\'' + escAttr(p.name) + '\',\'' + escAttr(p.department) + '\',\'' + escAttr(p.email) + '\')">' +
+           '<div class="ac-item-left"><span class="ac-item-name">' + hN + '</span>' + (p.email ? '<span class="ac-item-email">' + escHTML(p.email) + '</span>' : '') + '</div>' +
+           (p.department ? '<span class="ac-item-dept">' + escHTML(p.department) + '</span>' : '') +
+           '</div>';
+  }).join('');
+  drop.classList.add('open');
+}
+
+function acPick(t, name, dept, email) {
+  var cfg = _cfgFor(t);
+  document.getElementById(cfg.inputId).value = name;
+  chipShow(cfg.chipId, true);
+  if (!XP.has(cfg.xpKey)) { XP.add(cfg.xpKey); toast('+1 XP ⚡'); updHUD(); }
+  var eEl = document.getElementById(cfg.emailId);
+  eEl.value = email || ''; eEl.className = email ? 'af' : '';
+  chipShow(cfg.emailChipId, !!email);
+  if (email && !XP.has(cfg.emailXpKey)) { XP.add(cfg.emailXpKey); toast('+1 XP ⚡'); updHUD(); }
+  if (cfg.setDept) setTeam(dept);
+  acClose(t);
+}
+
+function _clearAutoFill(t) {
+  var cfg = _cfgFor(t), eEl = document.getElementById(cfg.emailId);
+  eEl.value = ''; eEl.className = ''; chipShow(cfg.emailChipId, false); chipShow(cfg.chipId, false);
+  if (cfg.setDept) setTeam('');
+  if (XP.has(cfg.xpKey)) { XP.delete(cfg.xpKey); updHUD(); }
+  if (XP.has(cfg.emailXpKey)) { XP.delete(cfg.emailXpKey); updHUD(); }
+}
+
+function acClose(t) { document.getElementById(t === 'c' ? 'acDropC' : 'acDropP').classList.remove('open'); _ac[t].hiIdx = -1; }
+
+function acKey(e, t) {
+  var drop = document.getElementById(t === 'c' ? 'acDropC' : 'acDropP'), items = drop.querySelectorAll('.ac-item');
+  if (!drop.classList.contains('open') || !items.length) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); _ac[t].hiIdx = Math.min(_ac[t].hiIdx + 1, items.length - 1); _hiItem(items, _ac[t].hiIdx); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); _ac[t].hiIdx = Math.max(_ac[t].hiIdx - 1, 0); _hiItem(items, _ac[t].hiIdx); }
+  else if (e.key === 'Enter' && _ac[t].hiIdx >= 0) { e.preventDefault(); var it = items[_ac[t].hiIdx]; acPick(t, it.dataset.name, it.dataset.dept, it.dataset.email); }
+  else if (e.key === 'Escape') acClose(t);
+}
+
+function _hiItem(items, idx) { items.forEach(function (it, i) { it.classList.toggle('hi', i === idx); }); if (idx >= 0) items[idx].scrollIntoView({ block: 'nearest' }); }
+function chipShow(id, show) { var el = document.getElementById(id); if (el) el.classList.toggle('show', !!show); }
+
+function setTeam(dept) {
+  var pill = document.getElementById('teamPill'), nm = document.getElementById('teamName'), hid = document.getElementById('teamHid');
+  hid.value = dept || '';
+  if (dept && dept !== '—') {
+    nm.textContent = dept; pill.classList.add('filled'); chipShow('teamChip', true);
+    if (!XP.has('teamHid')) { XP.add('teamHid'); toast('+1 XP ⚡'); updHUD(); }
+  } else {
+    nm.textContent = 'Choose coachee to auto-fill team...'; pill.classList.remove('filled'); chipShow('teamChip', false);
+    if (XP.has('teamHid')) { XP.delete('teamHid'); updHUD(); }
+  }
+}
+
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function escAttr(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+function escHTML(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+// ═══════════════════════════════════════════════════════════
+// SOUND ENGINE & CELEBRATIONS
+// ═══════════════════════════════════════════════════════════
+var soundOn = false, _audioCtx = null;
+function _ctx() { if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (_audioCtx.state === 'suspended') _audioCtx.resume(); return _audioCtx; }
+function _beep(freq, type, dur, vol) { if (!soundOn) return; try { var ctx = _ctx(), osc = ctx.createOscillator(), gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.type = type || 'sine'; osc.frequency.setValueAtTime(freq, ctx.currentTime); gain.gain.setValueAtTime(vol || 0.15, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur); osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur); } catch (e) {} }
+function _chime() { if (!soundOn) return; [523, 659, 784].forEach(function (f, i) { setTimeout(function () { _beep(f, 'sine', 0.4, 0.12); }, i * 100); }); }
+function _levelUpChime() { if (!soundOn) return; [523, 659, 784, 1047].forEach(function (f, i) { setTimeout(function () { _beep(f, 'sine', 0.5, 0.15); }, i * 120); }); }
+function _warnBeep() { _beep(880, 'square', 0.08, 0.1); setTimeout(function () { _beep(880, 'square', 0.08, 0.1); }, 140); }
+function _fanfare() { if (!soundOn) return; [523, 659, 784, 1047, 1318].forEach(function (f, i) { setTimeout(function () { _beep(f, 'sine', 0.6, 0.15); }, i * 100); }); }
+function toggleSound() { soundOn = !soundOn; if (soundOn) { try { _ctx(); } catch (e) {} } _chime(); document.getElementById('soundIco').textContent = soundOn ? '🔔' : '🔇'; document.getElementById('soundLbl').textContent = soundOn ? 'On' : 'Sound'; document.getElementById('soundToggle').classList.toggle('on', soundOn); }
+
+// ═══════════════════════════════════════════════════════════
+// WIZARD STEP NAVIGATION
+// ═══════════════════════════════════════════════════════════
+var currentStep = 0;
+
+function goToStep(stepIndex) {
+  // Enforce validation before proceeding forward
+  if (stepIndex > currentStep) {
+    if (!validateStep(currentStep)) return;
+  }
+  
+  // Hide all step cards, show targeted card
+  var cards = document.querySelectorAll('.card');
+  cards.forEach(function(c) {
+    var stepAttr = parseInt(c.getAttribute('data-step'));
+    if (stepAttr === stepIndex) {
+      c.classList.remove('step-hidden');
+      c.classList.add('step-active');
+    } else {
+      c.classList.remove('step-active');
+      c.classList.add('step-hidden');
+    }
+  });
+
+  currentStep = stepIndex;
+
+  // Render stepper indicators active/done states
+  var steps = document.querySelectorAll('.s9-item');
+  steps.forEach(function(s, idx) {
+    s.classList.remove('active', 'done');
+    if (idx === currentStep) {
+      s.classList.add('active');
+    } else if (idx < currentStep) {
+      s.classList.add('done');
+    }
+  });
+
+  // Toggle timer panel visibility
+  var timerPanel = document.getElementById('timerPanel');
+  timerPanel.style.display = 'flex';
+
+  // Update Recap Summary scores if transitioning to Recap step
+  if (currentStep === 7) {
+    document.getElementById('recapTech').textContent = (document.getElementById('rateTech').value || '—') + ' / 5';
+    document.getElementById('recapComm').textContent = (document.getElementById('rateComm').value || '—') + ' / 5';
+    document.getElementById('recapLead').textContent = (document.getElementById('rateLead').value || '—') + ' / 5';
+    document.getElementById('recapGrowth').textContent = (document.getElementById('rateGrowth').value || '—') + ' / 5';
+    document.getElementById('recapCulture').textContent = (document.getElementById('rateCulture').value || '—') + ' / 5';
+  }
+
+  // Sync Timer Active Phase
+  syncTimerPhase();
+
+  _chime();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep(step) {
+  if (step === 0) {
+    var cn = document.getElementById('coachName').value.trim();
+    var pn = document.getElementById('coacheeName').value.trim();
+    var ce = document.getElementById('coachEmail').value.trim();
+    var pe = document.getElementById('coacheeEmail').value.trim();
+    var th = document.getElementById('teamHid').value.trim();
+    if (!cn || !pn) {
+      alert('Please fill in Coach Name and Coachee Name before continuing.');
+      return false;
+    }
+    if (!ce || !pe) {
+      alert('Please fill in Coach Email and Coachee Email before continuing.');
+      return false;
+    }
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(ce)) {
+      alert('Please enter a valid Coach Email address.');
+      return false;
+    }
+    if (!emailRegex.test(pe)) {
+      alert('Please enter a valid Coachee Email address.');
+      return false;
+    }
+    if (!th) {
+      alert('Please select a Coachee from the dropdown so their Team is populated.');
+      return false;
+    }
+    if (!go) {
+      alert('Please start the meeting timer (click "Start Meeting") before going to Technical Skills.');
+      return false;
+    }
+  } else if (step >= 1 && step <= 5) {
+    var compKeys = ['', 'Tech', 'Comm', 'Lead', 'Growth', 'Culture'];
+    var rating = document.getElementById('rate' + compKeys[step]).value;
+    var keyLow = compKeys[step].toLowerCase();
+    var evidence = document.getElementById(keyLow + 'Evidence').value.trim();
+    if (!rating) {
+      alert('Please select a Rating value (1-5) before proceeding.');
+      return false;
+    }
+    if (evidence.length < 5) {
+      alert('Please provide detailed Evidence and Examples (at least 5 characters) for this competency.');
+      return false;
+    }
+  } else if (step === 6) {
+    var achievement = document.getElementById('greatestAchievement').value.trim();
+    var g1 = document.getElementById('goal1').value.trim();
+    if (achievement.length < 10) {
+      alert('Please describe your Greatest Achievements & Wins (at least 10 characters) in reflection.');
+      return false;
+    }
+    if (g1.length < 10) {
+      alert('Please define Goal 1 (at least 10 characters) before continuing.');
+      return false;
+    }
+  }
+  return true;
+}
+
+function syncTimerPhase() {
+  if (currentStep === 0) {
+    // Idle state
+    pi = -1;
+  } else if (currentStep >= 1 && currentStep <= 5) {
+    // Phase 01: Competency Review
+    pi = 0;
+  } else if (currentStep === 6) {
+    // Phase 02: Reflection & Goals
+    var achievement = document.getElementById('greatestAchievement').value.trim();
+    if (achievement.length > 0) {
+      pi = 2; // Switch to Goals once reflection achievements are filled
+    } else {
+      pi = 1; // Reflection phase
+    }
+  } else if (currentStep === 7) {
+    // Phase 04: Recap
+    pi = 3;
+  }
+  updFloatBar();
+  updSectionBadges();
+}
+
+// ═══════════════════════════════════════════════════════════
+// REFLECTION PROMPTS
+// ═══════════════════════════════════════════════════════════
+var IB = [
+  { i: '🏆', q: "What was your single most impactful contribution during this review period?" },
+  { i: '💪', q: "Which core competency did you feel most confident in, and why?" },
+  { i: '🌱', q: "In what area do you feel you've made the most visible progress since our last check-in?" },
+  { i: '🤝', q: "Who supported you most during this cycle, and how did you collaborate?" },
+  { i: '🚀', q: "Where did you take initiative or lead a project/discussion?" },
+  { i: '⚡', q: "Which blocker or challenge forced you to learn or adapt the most?" },
+  { i: '💡', q: "If you could redo one project from this cycle, what would you do differently?" },
+  { i: '🔧', q: "What tools, frameworks, or methodologies did you adopt that improved your efficiency?" },
+  { i: '🌟', q: "What is the biggest personal or professional breakthrough you had during this cycle?" },
+  { i: '📈', q: "What feedback from others helped you adjust your approach and improve?" }
+];
+
+// ═══════════════════════════════════════════════════════════
+// MEETING TIMER
+// ═══════════════════════════════════════════════════════════
+var PHASES = [
+  { id: 1, name: 'Competency Review',    dur: 900,  ftId: 'ftp1', ftT: 'ftt1' },
+  { id: 2, name: 'Reflection',           dur: 300,  ftId: 'ftp2', ftT: 'ftt2' },
+  { id: 3, name: 'Goals',                dur: 420,  ftId: 'ftp3', ftT: 'ftt3' },
+  { id: 4, name: 'Recap',                dur: 180,  ftId: 'ftp4', ftT: 'ftt4' }
+];
+
+var mt = 1800, miv = null, piv = null, pi = -1, pt2 = 0, go = false, ee = false, fin = false;
+var _warnedPhase = {};
+var fmt = function (s) { return String(~~(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+
+function rTimer() {
+  var el = document.getElementById('mTimer');
+  if (el) {
+    el.textContent = fmt(mt);
+    el.className = 'timer-info-val' + (mt <= 60 && mt > 0 ? ' warn' : '');
+  }
+  var ft = document.getElementById('ftTotal');
+  if (ft) {
+    ft.textContent = fmt(mt);
+    ft.className = 'ft-total-time' + (mt <= 60 && mt > 0 ? ' warn' : fin ? ' done' : '');
+  }
+}
+
+function updFloatBar() {
+  PHASES.forEach(function (p, i) {
+    var ftEl = document.getElementById(p.ftId), ftT = document.getElementById(p.ftT);
+    if (!ftEl || !ftT) return;
+    var isDone = go && i < pi, isActive = go && i === pi && !ee, isWarn = isActive && pt2 <= 30;
+    if (isDone) { ftEl.className = 'ft-phase ft-done'; ftT.textContent = '✓'; }
+    else if (isWarn) { ftEl.className = 'ft-phase ft-warn'; ftT.textContent = fmt(pt2); }
+    else if (isActive) { ftEl.className = 'ft-phase ft-active'; ftT.textContent = fmt(pt2); }
+    else { ftEl.className = 'ft-phase ft-idle'; ftT.textContent = fmt(p.dur); }
+  });
+}
+
+function updSectionBadges() {
+  _updBadge('sb1', 'sb1T', [0], 'Competency Review', 'Competency ');
+  _updBadge('sb2', 'sb2T', [0], 'Competency Review', 'Competency ');
+  _updBadge('sb3', 'sb3T', [0], 'Competency Review', 'Competency ');
+  _updBadge('sb4', 'sb4T', [0], 'Competency Review', 'Competency ');
+  _updBadge('sb5', 'sb5T', [0], 'Competency Review', 'Competency ');
+  _updBadge('sbReflect', 'sbReflectT', [1, 2], 'Reflection & Goals', 'Phase ');
+  _updBadge('sbRecap', 'sbRecapT', [3], 'Recap & Sign-off', 'Recap ');
+}
+
+function _updBadge(divId, spanId, phaseIdxs, idleLabel, livePrefix) {
+  var div = document.getElementById(divId), span = document.getElementById(spanId);
+  if (!div || !span) return;
+  if (!go) { div.className = 'sec-badge idle'; span.textContent = '⏱ ' + idleLabel; return; }
+  var allDone = phaseIdxs.every(function (idx) { return pi > idx; });
+  var isActive = phaseIdxs.indexOf(pi) >= 0;
+  if (allDone) { div.className = 'sec-badge done'; span.textContent = '✓ Done'; }
+  else if (isActive) { var isWarn = pt2 <= 30; div.className = 'sec-badge live' + (isWarn ? ' warn' : ''); span.textContent = livePrefix + fmt(pt2); }
+  else { div.className = 'sec-badge idle'; span.textContent = '⏱ Up next'; }
+}
+
+function startM() {
+  if (go) return;
+  go = true; document.getElementById('sBtn').disabled = true;
+  var ib = IB[~~(Math.random() * IB.length)];
+  document.getElementById('ibTxt').textContent = ib.q;
+  document.getElementById('ibBox').querySelector('.ibico').textContent = ib.i;
+  
+  miv = setInterval(function () { if (mt > 0) { mt--; rTimer(); } else clearInterval(miv); }, 1000);
+  
+  // Start active phase timer
+  pi = 0; pt2 = PHASES[0].dur;
+  updFloatBar(); updSectionBadges();
+  
+  piv = setInterval(function () {
+    if (pi >= 0 && pi < PHASES.length) {
+      if (pt2 > 0) {
+        pt2--;
+        // Update timer clock inside active phase text
+        var activePhase = PHASES[pi];
+        var ftT = document.getElementById(activePhase.ftT);
+        if (ftT) ftT.textContent = fmt(pt2);
+        
+        if (pt2 === 30 && !_warnedPhase[pi]) {
+          _warnedPhase[pi] = true;
+          _warnBeep();
+        }
+      } else {
+        // Auto progress phase
+        _warnedPhase[pi] = true;
+        pi++;
+        if (pi < PHASES.length) {
+          pt2 = PHASES[pi].dur;
+          _chime();
+        } else {
+          compS();
+        }
+      }
+    }
+    updFloatBar();
+    updSectionBadges();
+  }, 1000);
+}
+
+function compS() {
+  clearInterval(miv); clearInterval(piv); fin = true; mt = 0; rTimer();
+  updFloatBar(); updSectionBadges(); _fanfare();
+  document.getElementById('ovl').classList.add('show'); confetti();
+}
+
+function endM() {
+  clearInterval(miv); clearInterval(piv);
+  if (!go) { alert("Meeting has not started yet."); return; }
+  ee = true;
+  updFloatBar(); updSectionBadges();
+  alert('Meeting ended early. Please proceed to finish the evaluation.');
+}
+
+function resetM() {
+  if (!confirm('Are you sure you want to reset the timer and meeting settings?')) return;
+  clearInterval(miv); clearInterval(piv);
+  go = ee = fin = false; mt = 1800; pi = -1; pt2 = 0; _warnedPhase = {};
+  document.getElementById('sBtn').disabled = false;
+  document.getElementById('ibTxt').textContent = 'Your reflection prompt will appear here the moment the meeting starts. Get ready!';
+  document.getElementById('ibBox').querySelector('.ibico').textContent = '🏆';
+  rTimer();
+  updFloatBar();
+  updSectionBadges();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RATING & INPUT VALUE SETTERS
+// ═══════════════════════════════════════════════════════════
+function setRating(comp, val) {
+  var hidId = 'rate' + comp.charAt(0).toUpperCase() + comp.slice(1);
+  document.getElementById(hidId).value = val;
+  
+  var row = document.getElementById('row' + comp.charAt(0).toUpperCase() + comp.slice(1));
+  var buttons = row.querySelectorAll('.btn-rate');
+  buttons.forEach(function(btn, idx) {
+    if (idx + 1 === val) {
+      btn.classList.add('selected');
+    } else {
+      btn.classList.remove('selected');
+    }
+  });
+
+  var xpKey = 'rate' + comp;
+  if (!XP.has(xpKey)) {
+    XP.add(xpKey);
+    toast('+1 XP ⚡');
+    updHUD();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// XP SYSTEM
+// ═══════════════════════════════════════════════════════════
+var XP = new Set(), XT = 28;
+var lastLevel = 1;
+
+function xi(el, id) {
+  var h = el.value.trim() !== '';
+  if (h && !XP.has(id)) {
+    XP.add(id);
+    toast('+1 XP ⚡');
+    updHUD();
+  } else if (!h && XP.has(id)) {
+    XP.delete(id);
+    updHUD();
+  }
+}
+
+function updHUD() {
+  var n = XP.size;
+  var pct = Math.min((n / XT) * 100, 100);
+  document.getElementById('xfill').style.width = pct + '%';
+  document.getElementById('xtext').textContent = n + ' / ' + XT + ' XP';
+  document.getElementById('xstr').textContent = '🔥 ' + n + ' filled';
+  
+  var currentLevel = n < 5 ? 1 : n < 10 ? 2 : n < 16 ? 3 : n < 22 ? 4 : 5;
+  document.getElementById('hudLv').textContent = 'LV ' + currentLevel;
+  
+  if (currentLevel > lastLevel) {
+    _levelUpChime();
+    confetti();
+    toast('LEVEL UP! 🚀 LV ' + currentLevel);
+  }
+  lastLevel = currentLevel;
+  
+  document.getElementById('pfill').style.width = pct + '%';
+}
+
+var ttmr = null;
+function toast(msg) {
+  var o = document.querySelector('.xpt');
+  if (o) o.remove();
+  if (ttmr) clearTimeout(ttmr);
+  
+  var t = document.createElement('div');
+  t.className = 'xpt';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  
+  ttmr = setTimeout(function () { t.remove(); }, 2500);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONFETTI CELEBRATION EFFECT
+// ═══════════════════════════════════════════════════════════
+function confetti() {
+  var cl = ['#2563eb', '#7c3aed', '#0891b2', '#d97706', '#059669', '#dc2626', '#db2777'];
+  for (var i = 0; i < 70; i++) {
+    (function (d) {
+      setTimeout(function () {
+        var el = document.createElement('div'); el.className = 'conf';
+        el.style.left = Math.random() * 100 + 'vw'; el.style.background = cl[~~(Math.random() * cl.length)];
+        el.style.animationDuration = (Math.random() * 2 + 1.5) + 's'; el.style.animationDelay = Math.random() * .5 + 's';
+        var sz = Math.random() * 8 + 5; el.style.width = sz + 'px'; el.style.height = sz + 'px';
+        el.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+        document.body.appendChild(el); setTimeout(function () { el.remove(); }, 4000);
+      }, d);
+    })(i * 25);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATUS BAR
+// ═══════════════════════════════════════════════════════════
+function ss(type, msg) {
+  var b = document.getElementById('sbar'), icons = { info: '⏳', success: '✅', error: '❌', warn: '⚠️' };
+  b.className = 'sbar show ' + type;
+  document.getElementById('sico').textContent = icons[type] || '';
+  document.getElementById('stxt').textContent = msg;
+  b.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function hidS() { document.getElementById('sbar').className = 'sbar'; }
+
+// ═══════════════════════════════════════════════════════════
+// RECORD PERFORMANCE REVIEW SUBMIT
+// ═══════════════════════════════════════════════════════════
+function getSt() { return ee ? 'Ended Early' : fin ? 'Completed' : !go ? 'Recorded without timer' : 'In Progress'; }
+
+function rec() {
+  var coachName   = document.getElementById('coachName').value.trim();
+  var coachEmail  = document.getElementById('coachEmail').value.trim();
+  var coacheeName = document.getElementById('coacheeName').value.trim();
+  var coacheeEmail = document.getElementById('coacheeEmail').value.trim();
+  var team        = document.getElementById('teamHid').value.trim();
+
+  // Competency Ratings
+  var techRating   = document.getElementById('rateTech').value;
+  var commRating   = document.getElementById('rateComm').value;
+  var leadRating   = document.getElementById('rateLead').value;
+  var growthRating = document.getElementById('rateGrowth').value;
+  var cultureRating = document.getElementById('rateCulture').value;
+
+  // Competency Evidence & Actions
+  var techEvidence = document.getElementById('techEvidence').value.trim();
+  var techAction   = document.getElementById('techAction').value.trim();
+  
+  var commEvidence = document.getElementById('commEvidence').value.trim();
+  var commAction   = document.getElementById('commAction').value.trim();
+  
+  var leadEvidence = document.getElementById('leadEvidence').value.trim();
+  var leadAction   = document.getElementById('leadAction').value.trim();
+  
+  var growthEvidence = document.getElementById('growthEvidence').value.trim();
+  var growthAction   = document.getElementById('growthAction').value.trim();
+  
+  var cultureEvidence = document.getElementById('cultureEvidence').value.trim();
+  var cultureAction   = document.getElementById('cultureAction').value.trim();
+
+  // Reflections
+  var greatestAchievement = document.getElementById('greatestAchievement').value.trim();
+  var biggestChallenge    = document.getElementById('biggestChallenge').value.trim();
+  var doDifferently       = document.getElementById('doDifferently').value.trim();
+  var goal1               = document.getElementById('goal1').value.trim();
+  var goal2               = document.getElementById('goal2').value.trim();
+  var priorityCompetency  = document.getElementById('priorityCompetency').value;
+  var generalComments     = document.getElementById('generalComments').value.trim();
+
+  // Evaluator recap comments
+  var overallComments     = document.getElementById('overallComments').value.trim();
+
+  if (!coachName || !coacheeName) { ss('error', 'Coach name and coachee name are required.'); return; }
+  if (!team) { ss('error', 'Please select a coachee from the roster so the team is filled in.'); return; }
+
+  // Validator bounds
+  if (!techRating || !commRating || !leadRating || !growthRating || !cultureRating) { 
+    ss('error', 'Please rate all 5 core competencies.'); return; 
+  }
+  if (!techEvidence || !commEvidence || !leadEvidence || !growthEvidence || !cultureEvidence) {
+    ss('error', 'Please write Evidence & Examples for all 5 competencies.'); return;
+  }
+  if (!greatestAchievement || !goal1) {
+    ss('error', 'Achievements and Goal 1 are required in the Reflection phase.'); return;
+  }
+  if (!overallComments) { ss('error', 'Overall Comments/takeaways are required.'); return; }
+
+  var btn = document.getElementById('recBtn');
+  btn.disabled = true;
+  ss('info', 'Submitting Performance Review evaluation...');
+
+  google.script.run
+    .withSuccessHandler(function (r) {
+      ss('success', r.message);
+      confetti();
+      _fanfare();
+      document.getElementById('xfill').style.width = '100%';
+      btn.disabled = false;
+    })
+    .withFailureHandler(function (e) {
+      ss('error', e && e.message ? e.message : 'System recording failed. Check connection.');
+      btn.disabled = false;
+    })
+    .recordPerformanceReview({
+      coachName:            coachName,
+      coachEmail:           coachEmail,
+      coacheeName:          coacheeName,
+      coacheeEmail:         coacheeEmail,
+      team:                 team,
+      
+      techRating:           techRating,
+      techEvidence:         techEvidence,
+      techAction:           techAction,
+      
+      commRating:           commRating,
+      commEvidence:         commEvidence,
+      commAction:           commAction,
+      
+      leadRating:           leadRating,
+      leadEvidence:         leadEvidence,
+      leadAction:           leadAction,
+      
+      growthRating:         growthRating,
+      growthEvidence:       growthEvidence,
+      growthAction:         growthAction,
+      
+      cultureRating:        cultureRating,
+      cultureEvidence:      cultureEvidence,
+      cultureAction:        cultureAction,
+      
+      greatestAchievement:  greatestAchievement,
+      biggestChallenge:     biggestChallenge,
+      doDifferently:        doDifferently,
+      goal1:                goal1,
+      goal2:                goal2,
+      priorityCompetency:   priorityCompetency,
+      generalComments:      generalComments,
+      
+      overallComments:      overallComments,
+      sessionStatus:        getSt()
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════
+(function () {
+  document.getElementById('dtm').value = new Date().toLocaleString();
+  rTimer();
+  updFloatBar();
+  updSectionBadges();
+  
+  // Set change handlers for textareas to auto reward XP
+  var textareas = document.querySelectorAll('textarea, select');
+  textareas.forEach(function(el) {
+    var id = el.id;
+    el.addEventListener('input', function() {
+      xi(el, id);
+    });
+    el.addEventListener('change', function() {
+      xi(el, id);
+    });
+  });
+})();
+</script>
+</body>
+</html>

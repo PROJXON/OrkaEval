@@ -160,8 +160,10 @@ export default function Profile() {
             <span className="btn-nav__icon">🏠</span>
             <span className="btn-nav__text">Dashboard</span>
           </button>
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-            {theme === 'dark' ? '☀️' : '🌙'}
+          <button className="theme-switch" onClick={toggleTheme} aria-label="Toggle theme">
+            <div className="theme-switch-thumb">
+              {theme === 'dark' ? '🌙' : '☀️'}
+            </div>
           </button>
         </div>
       </nav>

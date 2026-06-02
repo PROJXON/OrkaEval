@@ -19,7 +19,14 @@ function Login() {
     const authBase = import.meta.env.VITE_AUTH_BASE_URL || 'https://orkaeval.onrender.com';
     const isElectron = !!window.electron;
     const returnParam = isElectron ? 'returnUrl=electron' : '';
-    window.location.href = `${authBase}/api/auth/google${returnParam ? '?' + returnParam : ''}`;
+    const authUrl = `${authBase}/api/auth/google${returnParam ? '?' + returnParam : ''}`;
+
+    if (isElectron && window.electron.openExternal) {
+      window.electron.openExternal(authUrl);
+      setTimeout(() => setLoading(false), 3000); // Reset loading state in case they cancel
+    } else {
+      window.location.href = authUrl;
+    }
   };
 
   const handlePasswordLogin = async (e) => {

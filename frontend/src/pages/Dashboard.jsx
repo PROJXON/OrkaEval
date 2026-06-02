@@ -331,8 +331,10 @@ function Dashboard() {
               🕒 {showHistory ? 'Close History' : 'View History'}
             </button>
           )}
-          <button className="theme-toggle" onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: '8px' }}>
-            {theme === 'dark' ? '☀️' : '🌙'}
+          <button className="theme-switch" onClick={toggleTheme} aria-label="Toggle theme">
+            <div className="theme-switch-thumb">
+              {theme === 'dark' ? '🌙' : '☀️'}
+            </div>
           </button>
           <div 
             onClick={() => navigate('/profile')} 

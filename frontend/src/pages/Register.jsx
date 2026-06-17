@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
 import Logo from '../components/Logo';
+import CoachSearchDropdown from '../components/CoachSearchDropdown';
 
 function Register() {
   const [loading, setLoading] = useState(false);
@@ -192,17 +193,13 @@ function Register() {
 
               <div className="form-group">
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: 'var(--clr-text-muted)' }}>ASSIGN COACH <span style={{ fontWeight: 400, fontSize: '0.75rem' }}>(optional)</span></label>
-                <select
-                  name="coachId"
+                <CoachSearchDropdown
+                  coaches={coaches}
                   value={formData.coachId}
-                  onChange={handleChange}
-                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '0.9rem', outline: 'none' }}
-                >
-                  <option value="">Select a coach (can be changed later)</option>
-                  {coaches.map(c => (
-                    <option key={c.id} value={c.id}>{c.fullName}</option>
-                  ))}
-                </select>
+                  onChange={(val) => handleChange({ target: { name: 'coachId', value: val } })}
+                  placeholder="Select a coach (can be changed later)"
+                  clearText="None (Clear selection)"
+                />
               </div>
 
               <button

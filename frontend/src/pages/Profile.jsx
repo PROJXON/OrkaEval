@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { clearToken } from '../utils/tokenStore';
 import api from '../api';
 import toast from 'react-hot-toast';
+import CoachSearchDropdown from '../components/CoachSearchDropdown';
 
 export default function Profile() {
   const { user, setUser } = useUser();
@@ -210,17 +211,13 @@ export default function Profile() {
             <h3 style={{ marginBottom: 20, fontSize: '1.2rem' }}>Your Coach</h3>
             <div className="form-group">
               <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Select or Change Coach</label>
-              <select
+              <CoachSearchDropdown
+                coaches={coaches.filter(c => c.userId !== user?.id)}
                 value={resolvedCoachId}
-                onChange={(e) => handleCoachChange(e.target.value)}
+                onChange={handleCoachChange}
+                placeholder="Select a coach..."
                 disabled={loading}
-                style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--clr-border)', background: 'var(--clr-surface-2)', color: 'var(--clr-text)', fontSize: '1rem' }}
-              >
-                <option value="">Select a coach...</option>
-                {coaches.filter(c => c.userId !== user?.id).map(c => (
-                  <option key={c.id} value={c.id}>{c.fullName}</option>
-                ))}
-              </select>
+              />
               <p style={{ fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginTop: 8 }}>
                 Your coach will be able to review your performance and provide feedback.
               </p>

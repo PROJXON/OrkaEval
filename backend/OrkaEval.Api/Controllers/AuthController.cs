@@ -569,6 +569,43 @@ public class AuthController : ControllerBase
         if (req.NotificationsEnabled.HasValue)
             user.NotificationsEnabled = req.NotificationsEnabled.Value;
 
+        if (req.StartDate.HasValue)
+        {
+            user.StartDate = req.StartDate.Value;
+
+            if (user.Role == UserRole.Candidate || user.Role == UserRole.Both)
+            {
+                var candidate = await _db.Candidates.FirstOrDefaultAsync(c => c.UserId == user.Id);
+                if (candidate != null)
+                {
+                    candidate.StartDate = req.StartDate.Value;
+                    candidate.CycleStart = req.StartDate.Value;
+                    candidate.CycleEnd = req.StartDate.Value.AddDays(56);
+
+                    var now = DateTime.UtcNow;
+                    var cycle = await _db.Cycles
+                        .Where(cy => cy.CandidateId == candidate.Id && cy.StartDate <= now && cy.EndDate >= now)
+                        .OrderByDescending(cy => cy.CreatedAt)
+                        .FirstOrDefaultAsync();
+
+                    if (cycle != null)
+                    {
+                        cycle.StartDate = req.StartDate.Value.AddDays((cycle.Number - 1) * 56);
+                        cycle.EndDate = cycle.StartDate.AddDays(56);
+                    }
+                }
+            }
+
+            if (user.Role == UserRole.Coach || user.Role == UserRole.Both)
+            {
+                var coach = await _db.Coaches.FirstOrDefaultAsync(c => c.UserId == user.Id);
+                if (coach != null)
+                {
+                    coach.StartDate = req.StartDate.Value;
+                }
+            }
+        }
+
         await _db.SaveChangesAsync();
         await _auditService.LogAsync(user.Id, "ProfileUpdate", "User updated profile details");
 

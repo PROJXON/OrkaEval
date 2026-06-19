@@ -36,6 +36,7 @@ public class UpdateProfileRequest
     public string? Department { get; set; }
     public string? AvatarUrl { get; set; }
     public bool? NotificationsEnabled { get; set; }
+    public DateTime? StartDate { get; set; }
 }
 
 public class UpdatePasswordRequest

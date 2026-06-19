@@ -13,7 +13,7 @@ function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: new Date().toLocaleDateString('en-CA'), // 'en-CA' outputs YYYY-MM-DD
     profileType: 'both',
     googleId: '',
     avatarUrl: '',

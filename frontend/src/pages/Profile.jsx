@@ -100,6 +100,12 @@ export default function Profile() {
     }
   };
 
+  const formatDateSafe = (isoString) => {
+    if (!isoString) return '';
+    const [year, month, day] = isoString.split('T')[0].split('-');
+    return new Date(year, month - 1, day).toLocaleDateString();
+  };
+
   const resolvedCoachId = user?.coachId ?? user?.candidateData?.CoachId ?? '';
 
   const [isEditingAccount, setIsEditingAccount] = useState(false);
@@ -296,7 +302,7 @@ export default function Profile() {
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--clr-text-muted)', marginBottom: 4 }}>Start Date</label>
-                  <div style={{ fontWeight: 600 }}>{new Date(user?.startDate).toLocaleDateString()}</div>
+                  <div style={{ fontWeight: 600 }}>{formatDateSafe(user?.startDate)}</div>
                 </div>
                 {user?.role !== 'Coach' && (
                   <div style={{ gridColumn: 'span 2' }}>

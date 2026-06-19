@@ -114,17 +114,10 @@ function createWindow() {
 }
 
 // Handle deep linking for Windows
-if (isDev) {
-  app.whenReady().then(() => {
-    createWindow();
-    const initialDeepLink = process.argv.find(arg => arg.startsWith('orkaeval://'));
-    if (initialDeepLink) handleDeepLink(initialDeepLink);
-  });
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
 } else {
-  const gotTheLock = app.requestSingleInstanceLock();
-  if (!gotTheLock) {
-    app.quit();
-  } else {
   app.on('second-instance', (event, commandLine) => {
     // Someone tried to run a second instance, we should focus our window.
     if (mainWindow) {
@@ -137,12 +130,11 @@ if (isDev) {
     }
   });
 
-    app.whenReady().then(() => {
-      createWindow();
-      const initialDeepLink = process.argv.find(arg => arg.startsWith('orkaeval://'));
-      if (initialDeepLink) handleDeepLink(initialDeepLink);
-    });
-  }
+  app.whenReady().then(() => {
+    createWindow();
+    const initialDeepLink = process.argv.find(arg => arg.startsWith('orkaeval://'));
+    if (initialDeepLink) handleDeepLink(initialDeepLink);
+  });
 }
 
 // Global handler for the custom protocol

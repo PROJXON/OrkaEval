@@ -72,8 +72,21 @@ function Dashboard() {
   const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
   const [msg, setMsg] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const formatDateSafe = (isoString) => {
+    if (!isoString) return '';
+    const [year, month, day] = isoString.split('T')[0].split('-');
+    return new Date(year, month - 1, day).toLocaleDateString();
+  };
+
   const cycleInfo = useMemo(() => {
-    const programStartDate = "2026-03-01"; // Fixed program start date
+    if (user?.currentCycle) {
+      return {
+        start: formatDateSafe(user.currentCycle.startDate),
+        end: formatDateSafe(user.currentCycle.endDate),
+        number: user.currentCycle.number || user.currentCycle.Number
+      };
+    }
+    const programStartDate = "2026-03-01T00:00:00"; // Fixed program start date in local time
     const start = new Date(programStartDate);
     const now = new Date();
     const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
@@ -88,7 +101,7 @@ function Dashboard() {
       end: cycleEnd.toLocaleDateString(),
       number: cycleNum
     };
-  }, [user?.startDate]);
+  }, [user]);
 
   const loadCandidates = useCallback(async () => {
     try {

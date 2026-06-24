@@ -126,11 +126,16 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
+        var frontendUrl = builder.Configuration["Frontend:Url"] ?? "https://orkaeval.vercel.app";
+        
         policy.WithOrigins(
                 "http://localhost:5173", 
                 "http://localhost:5000",
-                "https://frontend-orkaeval.vercel.app"
+                "https://frontend-orkaeval.vercel.app",
+                "https://orkaeval.vercel.app",
+                frontendUrl
               )
+              .SetIsOriginAllowed(origin => true) // Temporarily allow all during migration
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials()

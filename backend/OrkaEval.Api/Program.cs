@@ -131,7 +131,6 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                 "http://localhost:5173", 
                 "http://localhost:5000",
-                "https://frontend-orkaeval.vercel.app",
                 "https://orkaeval.vercel.app",
                 frontendUrl
               )

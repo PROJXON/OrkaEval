@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { clearToken } from '../utils/tokenStore';
-import { getCandidates, submitForm, getFormHistory } from '../api';
+import { getCandidates, getFormHistory } from '../api';
 import EvaluationContainer from '../components/forms/EvaluationContainer';
 import EvaluatorDashboard from '../components/forms/EvaluatorDashboard';
 import PerformanceReviewResults from '../components/forms/PerformanceReviewResults';
@@ -18,6 +18,18 @@ function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const userRole = user?.role || user?.Role || 'Candidate';
+  const [viewRole, setViewRole] = useState(userRole === 'Both' ? 'Candidate' : userRole);
+  const [candidates, setCandidates] = useState([]);
+  const [selectedCandidateId, setSelectedCandidateId] = useState('');
+  const [history, setHistory] = useState([]);
+  const [activeForm, setActiveForm] = useState('performance_review');
+  const [showEvaluation, setShowEvaluation] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedEvaluationId, setSelectedEvaluationId] = useState(null);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const msg = null; // Removed setMsg as it was unused
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('view') === 'history') {
@@ -58,20 +70,7 @@ function Dashboard() {
     return `${base}${url}`;
   };
 
-  const userRole = user?.role || user?.Role || 'Candidate';
-  const [viewRole, setViewRole] = useState(userRole === 'Both' ? 'Candidate' : userRole);
-  const [candidates, setCandidates] = useState([]);
-  const [selectedCandidateId, setSelectedCandidateId] = useState('');
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [activeForm, setActiveForm] = useState('performance_review');
-  const [showEvaluation, setShowEvaluation] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
 
-  const [selectedEvaluationId, setSelectedEvaluationId] = useState(null);
-  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
-  const [msg, setMsg] = useState(null);
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const formatDateSafe = (isoString) => {
     if (!isoString) return '';
     const [year, month, day] = isoString.split('T')[0].split('-');

@@ -94,6 +94,7 @@ export default function Profile() {
       setUser(prev => ({ ...prev, avatarUrl: res.data.avatarUrl }));
       toast.success('Profile picture updated');
     } catch (err) {
+      console.error('Avatar upload error:', err);
       toast.error('Failed to upload picture');
     } finally {
       setLoading(false);
